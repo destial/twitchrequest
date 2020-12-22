@@ -1,10 +1,11 @@
 {
   "name": "twitchrequest",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Get Twitch requests for streams, especially when a stream goes live or stops streaming",
   "main": "index.js",
   "directories": {
-    "lib": "lib"
+    "lib": "lib",
+    "test": "test"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -18,10 +19,19 @@
     "twitch",
     "request"
   ],
-  "author": "Rance Andres",
+  "author": "destiall",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/destial/twitchrequest/issues"
   },
-  "homepage": "https://github.com/destial/twitchrequest#readme"
+  "homepage": "https://github.com/destial/twitchrequest#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "jshint": "^2.12.0",
+    "request": "^2.88.2",
+    "typescript": "^4.1.3"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.14"
+  }
 }

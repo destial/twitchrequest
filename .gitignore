@@ -105,3 +105,9 @@ dist
 
 # TypeScript files
 *.ts
+
+# My test files
+test/
+
+# JSHint
+.jshintrc

@@ -56,7 +56,6 @@ var TwitchRequest = /** @class */ (function (_super) {
     function TwitchRequest(options) {
         var _this = _super.call(this) || this;
         _this.interval = options.interval * 1000 || 30000;
-        _this.isLive = false;
         _this.channel = [];
         options.channels.forEach(function (ch) {
             var twitchChannel = new TwitchChannel(ch.toLowerCase());
@@ -144,12 +143,27 @@ var TwitchRequest = /** @class */ (function (_super) {
     };
     TwitchRequest.prototype.getUser = function (username) {
         return __awaiter(this, void 0, void 0, function () {
-            var user, token, getData;
+            var getToken, token, getData, cid, cs, int, time, promise;
             var _this = this;
             return __generator(this, function (_a) {
-                user = null;
+                getToken = function (callback) {
+                    var options = {
+                        url: "https://id.twitch.tv/oauth2/token",
+                        json: true,
+                        body: {
+                            client_id: _this.clientid,
+                            client_secret: _this.clientsecret,
+                            grant_type: 'client_credentials'
+                        }
+                    };
+                    Request.post(options, function (err, res, body) {
+                        if (err)
+                            return console.log(err);
+                        callback(res.body.access_token);
+                    });
+                };
                 token = "";
-                this.getToken(function (t) {
+                getToken(function (t) {
                     token = t;
                     return t;
                 });
@@ -168,20 +182,32 @@ var TwitchRequest = /** @class */ (function (_super) {
                         callback(JSON.parse(body));
                     });
                 };
-                return [2 /*return*/, setTimeout(function () {
-                        getData(("https://api.twitch.tv/helix/search/channels?query=" + username), token, function (response) {
+                cid = this.clientid;
+                cs = this.clientsecret;
+                int = this.interval;
+                time = this.timeout;
+                promise = new Promise(function (resolve, reject) {
+                    setTimeout(function () {
+                        var user = null;
+                        getData(("https://api.twitch.tv/helix/user?login=" + username), token, function (response) {
                             if (response.data === undefined) {
-                                console.log("Incorrect parameters! {channel=" + username + ", clientid=" + _this.clientid + "}, clientsecret=" + _this.clientsecret + ", interval=" + _this.interval + "}");
+                                console.log("Incorrect parameters! {channel=" + username + ", clientid=" + cid + "}, clientsecret=" + cs + ", interval=" + int + "}");
+                                reject(user);
                             }
-                            var e = response.data.find(function (d) { return d.user_name.toLowerCase() === username; });
-                            getData(("https://api.twitch.tv/helix/games?id=" + e.game_id), token, function (res) {
-                                user = new StreamData(e, e.user_name.toLowerCase(), e.title, res.data[0].name, e.thumbnail_url, null, 0);
-                                return user;
-                            });
-                            return user;
+                            else {
+                                var pfp;
+                                getData(("https://api.twitch.tv/helix/search/channels?query=" + username), token, function (res) {
+                                    var ee = res.data.find(function (d) { return d.display_name === username; });
+                                    pfp = ee.thumbnail_url;
+                                });
+                                var e = response.data.find(function (d) { return d.display_name.toLowerCase() === username; });
+                                user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, pfp, e.view_count);
+                                resolve(user);
+                            }
                         });
-                        return user;
-                    }, this.timeout)];
+                    }, time);
+                });
+                return [2 /*return*/, promise];
             });
         });
     };
@@ -255,28 +281,6 @@ var TwitchRequest = /** @class */ (function (_super) {
             });
         });
     };
-    TwitchRequest.prototype.getToken = function (callback) {
-        return __awaiter(this, void 0, void 0, function () {
-            var options;
-            return __generator(this, function (_a) {
-                options = {
-                    url: "https://id.twitch.tv/oauth2/token",
-                    json: true,
-                    body: {
-                        client_id: this.clientid,
-                        client_secret: this.clientsecret,
-                        grant_type: 'client_credentials'
-                    }
-                };
-                Request.post(options, function (err, res, body) {
-                    if (err)
-                        return console.log(err);
-                    callback(res.body.access_token);
-                });
-                return [2 /*return*/];
-            });
-        });
-    };
     return TwitchRequest;
 }(events_1.EventEmitter));
 var StreamData = /** @class */ (function () {
@@ -294,6 +298,20 @@ var StreamData = /** @class */ (function () {
         }
     }
     return StreamData;
+}());
+var UserData = /** @class */ (function () {
+    function UserData(r, n, d, id, pfp, v) {
+        this.raw = r;
+        this.name = n;
+        this.description = d;
+        this.id = id;
+        this.profile = pfp;
+        this.views = v;
+        if (!isEmpty(r.started_at)) {
+            this.created = new Date(r.created_at);
+        }
+    }
+    return UserData;
 }());
 var TwitchChannel = /** @class */ (function () {
     function TwitchChannel(n) {
@@ -318,5 +336,7 @@ function isEmpty(str) {
 }
 module.exports = {
     TwitchRequest: TwitchRequest,
-    StreamData: StreamData
+    StreamData: StreamData,
+    UserData: UserData,
+    TwitchChannel: TwitchChannel
 };
