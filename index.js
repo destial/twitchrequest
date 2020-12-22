@@ -109,7 +109,7 @@ var TwitchRequest = /** @class */ (function (_super) {
             main.channel.forEach(function (ch) {
                 getData(("https://api.twitch.tv/helix/search/channels?query=" + ch.name), token, function (response) {
                     if (response.data === undefined) {
-                        console.log("Incorrect parameters! {channel=" + ch.name + ", clientid=" + main.clientid + "}, clientsecret=" + main.clientsecret + ", interval=" + main.interval + ", timeout:" + main.timeout + "}");
+                        console.log("Error! {channel=" + ch.name + ", clientid=" + main.clientid + ", clientsecret=" + main.clientsecret + ", interval=" + main.interval + ", timeout=" + main.timeout + "}");
                     }
                     else {
                         var e_1 = response.data.find(function (d) { return d.display_name === ch.name; });
@@ -120,7 +120,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                             getData(("https://api.twitch.tv/helix/games?id=" + e_1.game_id), token, function (res) {
                                 getData(("https://api.twitch.tv/helix/streams?user_login=" + ch.name), token, function (r) {
                                     if (r.data === undefined) {
-                                        console.log("Incorrect parameters! {channel=" + ch.name + ", clientid=" + _this.clientid + "}, clientsecret=" + _this.clientsecret + ", interval=" + _this.interval + "}");
+                                        console.log("Error! {channel=" + ch.name + ", clientid=" + _this.clientid + ", clientsecret=" + _this.clientsecret + ", interval=" + _this.interval + ", timeout=" + main.timeout + "}");
                                     }
                                     else {
                                         var ee = r.data.find(function (d) { return d.user_name.toLowerCase() === ch.name; });
@@ -191,8 +191,8 @@ var TwitchRequest = /** @class */ (function (_super) {
                         var user = null;
                         getData(("https://api.twitch.tv/helix/user?login=" + username), token, function (response) {
                             if (response.data === undefined) {
-                                console.log("Incorrect parameters! {channel=" + username + ", clientid=" + cid + "}, clientsecret=" + cs + ", interval=" + int + "}");
-                                reject(user);
+                                console.log("Error! {channel=" + username + ", clientid=" + cid + ", clientsecret=" + cs + ", interval=" + int + ", timeout=" + time + "}");
+                                resolve(user);
                             }
                             else {
                                 var pfp;
@@ -259,12 +259,13 @@ var TwitchRequest = /** @class */ (function (_super) {
                 promise = new Promise(function (resolve, reject) {
                     setTimeout(function () {
                         var user = null;
-                        getData(("https://api.twitch.tv/helix/streams?user_login=" + username), token, function (response) {
+                        getData(("https://api.twitch.tv/helix/streams?user_login=" + username.toLowerCase()), token, function (response) {
                             if (response.data === undefined) {
-                                console.log("Incorrect parameters! {channel=" + username + ", clientid=" + cid + "}, clientsecret=" + cs + ", interval=" + int + "}");
-                                reject(user);
+                                console.log("Error! {channel=" + username + ", clientid=" + cid + ", clientsecret=" + cs + ", interval=" + int + ". timeout=" + time + "}");
+                                resolve(user);
                             }
                             else {
+                                console.log(response.data);
                                 var pfp;
                                 getData(("https://api.twitch.tv/helix/search/channels?query=" + username), token, function (res) {
                                     var ee = res.data.find(function (d) { return d.display_name === username; });

@@ -107,6 +107,7 @@ dist
 
 # My test files
 test/
+test.js
 
 # JSHint
 .jshintrc
