@@ -1,11 +1,10 @@
 {
   "name": "twitchrequest",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Get Twitch requests for streams, especially when a stream goes live or stops streaming",
   "main": "index.js",
   "directories": {
-    "lib": "lib",
-    "test": "test"
+    "lib": "lib"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

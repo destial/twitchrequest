@@ -115,27 +115,26 @@ var TwitchRequest = /** @class */ (function (_super) {
                         var e_1 = response.data.find(function (d) { return d.display_name === ch.name; });
                         getData(("https://api.twitch.tv/helix/games?id=" + e_1.game_id), token, function (res) {
                             main.emit('debug', new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, null, 0));
-                        });
-                        if (e_1.is_live && !ch.isLive()) {
-                            getData(("https://api.twitch.tv/helix/games?id=" + e_1.game_id), token, function (res) {
+                            if (e_1.is_live && !ch.isLive()) {
                                 getData(("https://api.twitch.tv/helix/streams?user_login=" + ch.name), token, function (r) {
                                     if (r.data === undefined) {
                                         console.log("Error! {channel=" + ch.name + ", clientid=" + _this.clientid + ", clientsecret=" + _this.clientsecret + ", interval=" + _this.interval + ", timeout=" + main.timeout + "}");
                                     }
                                     else {
                                         var ee = r.data.find(function (d) { return d.user_name.toLowerCase() === ch.name; });
-                                        main.emit('live', new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, ee.thumbnail_url.replace('{width}', '320').replace('{height}', '180'), ee.viewer_count));
+                                        if (ch.thumbnail !== ee.thumbnail_url) {
+                                            main.emit('live', new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, ee.thumbnail_url.replace('{width}', '320').replace('{height}', '180'), ee.viewer_count));
+                                            ch.setTB(ee.thumbnail_url);
+                                            ch.setLive();
+                                        }
                                     }
                                 });
-                            });
-                            ch.setLive();
-                        }
-                        else if (!e_1.is_live && ch.isLive()) {
-                            getData(("https://api.twitch.tv/helix/games?id=" + e_1.game_id), token, function (res) {
+                            }
+                            else if (!e_1.is_live && ch.isLive()) {
                                 main.emit('unlive', new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, null, 0));
-                            });
-                            ch.notLive();
-                        }
+                                ch.notLive();
+                            }
+                        });
                     }
                 });
             });
@@ -318,6 +317,7 @@ var TwitchChannel = /** @class */ (function () {
     function TwitchChannel(n) {
         this.name = n;
         this.live = false;
+        this.thumbnail = null;
     }
     TwitchChannel.prototype.setLive = function () {
         this.live = true;
@@ -327,6 +327,9 @@ var TwitchChannel = /** @class */ (function () {
     };
     TwitchChannel.prototype.isLive = function () {
         return this.live;
+    };
+    TwitchChannel.prototype.setTB = function (tb) {
+        this.thumbnail = tb;
     };
     return TwitchChannel;
 }());
