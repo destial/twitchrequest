@@ -63,6 +63,11 @@ declare module 'twitchrequest' {
         debug: [StreamData];
     }
 
+    export class TwitchChannel {
+        name: string;
+        private live: boolean;
+    }
+    
     export type URL = string;
     
 }

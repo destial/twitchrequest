@@ -4,6 +4,7 @@
         "target": "ES6",
         "watch": true,
         "lib": ["ES6", "DOM", "ES2019"],
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "removeComments": false
     }
 }

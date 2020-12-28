@@ -56,29 +56,14 @@ var TwitchRequest = /** @class */ (function (_super) {
     __extends(TwitchRequest, _super);
     function TwitchRequest(options) {
         var _this = _super.call(this) || this;
-        /**
-         * @type {number}
-         */
         _this.interval = options.interval * 1000 || 30000;
-        /**
-         * @type {TwitchChannel[]}
-         */
         _this.channel = [];
         options.channels.forEach(function (ch) {
             var twitchChannel = new TwitchChannel(ch.toLowerCase());
             _this.channel.push(twitchChannel);
         });
-        /**
-         * @type {string}
-         */
         _this.clientid = options.client_id || null;
-        /**
-         * @type {string}
-         */
         _this.clientsecret = options.client_secret || null;
-        /**
-         * @type {number}
-         */
         _this.timeout = options.timeout * 1000 || 5000;
         setInterval(_this.listener, _this.interval, _this);
         return _this;
@@ -142,11 +127,8 @@ var TwitchRequest = /** @class */ (function (_super) {
                                     }
                                     else {
                                         var ee = r.data.find(function (d) { return d.user_name.toLowerCase() === ch.name; });
-                                        if (ch.thumbnail !== ee.thumbnail_url) {
-                                            main.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, ee.thumbnail_url.replace('{width}', '320').replace('{height}', '180'), ee.viewer_count));
-                                            ch.setTB(ee.thumbnail_url);
-                                            ch.setLive();
-                                        }
+                                        main.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, ee.thumbnail_url.replace('{width}', '320').replace('{height}', '180'), ee.viewer_count));
+                                        ch.setLive();
                                     }
                                 });
                             }
@@ -318,33 +300,12 @@ var TwitchRequest = /** @class */ (function (_super) {
 }(events_1.EventEmitter));
 var StreamData = /** @class */ (function () {
     function StreamData(r, n, t, g, pfp, tb, v) {
-        /**
-         * @type {any} Raw Data
-         */
         this.raw = r;
-        /**
-         * @type {string} The channel name
-         */
         this.name = n;
-        /**
-         * @type {string} The stream title
-         */
         this.title = t;
-        /**
-         * @type {string} The currently playing game
-         */
         this.game = g;
-        /**
-         * @type {URL} The channel's profile picture
-         */
         this.profile = pfp;
-        /**
-         * @type {URL} The channel's thumbnail
-         */
         this.thumbnail = tb;
-        /**
-         * @type {Date} The date when the stream started
-         */
         this.date = new Date();
         this.viewers = v;
         if (!isEmpty(r.started_at)) {
@@ -371,7 +332,6 @@ var TwitchChannel = /** @class */ (function () {
     function TwitchChannel(n) {
         this.name = n;
         this.live = false;
-        this.thumbnail = null;
     }
     TwitchChannel.prototype.setLive = function () {
         this.live = true;
@@ -382,15 +342,10 @@ var TwitchChannel = /** @class */ (function () {
     TwitchChannel.prototype.isLive = function () {
         return this.live;
     };
-    TwitchChannel.prototype.setTB = function (tb) {
-        this.thumbnail = tb;
-    };
     return TwitchChannel;
 }());
 function isEmpty(str) {
-    if (str == "" || str == null || str == undefined || str.length == 0 || str.trim().length == 0 || str.trim() == "")
-        return true;
-    return false;
+    return (str == "" || str == null || str == undefined || str.length == 0 || str.trim().length == 0 || str.trim() == "");
 }
 module.exports = {
     TwitchRequest: TwitchRequest,
