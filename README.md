@@ -24,7 +24,7 @@ const options = {
     // Increase this time if your internet connection is slower (if not set, defaults to 3 seconds)
     timeout: 7
 };
-const client = new TwitchRequests(op);
+const client = new TwitchRequests(options);
 
 client.on('live', (data) => {
     console.log(`${data.name} is now live! Streaming ${data.title} on ${data.game}! Started at ${data.date}`);

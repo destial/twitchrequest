@@ -103,7 +103,7 @@ dist
 .tern-port
 
 # TypeScript files
-*.ts
+index.ts
 
 # My test files
 test/

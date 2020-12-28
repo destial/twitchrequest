@@ -51,22 +51,42 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 var events_1 = require("events");
 var Request = require("request");
+var constants_1 = require("./util/constants");
 var TwitchRequest = /** @class */ (function (_super) {
     __extends(TwitchRequest, _super);
     function TwitchRequest(options) {
         var _this = _super.call(this) || this;
+        /**
+         * @type {number}
+         */
         _this.interval = options.interval * 1000 || 30000;
+        /**
+         * @type {TwitchChannel[]}
+         */
         _this.channel = [];
         options.channels.forEach(function (ch) {
             var twitchChannel = new TwitchChannel(ch.toLowerCase());
             _this.channel.push(twitchChannel);
         });
+        /**
+         * @type {string}
+         */
         _this.clientid = options.client_id || null;
+        /**
+         * @type {string}
+         */
         _this.clientsecret = options.client_secret || null;
+        /**
+         * @type {number}
+         */
         _this.timeout = options.timeout * 1000 || 5000;
         setInterval(_this.listener, _this.interval, _this);
         return _this;
     }
+    /**
+     * @private
+     * @param {TwitchRequest} main
+     */
     TwitchRequest.prototype.listener = function (main) {
         var _this = this;
         var getToken = function (callback) {
@@ -114,7 +134,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                     else {
                         var e_1 = response.data.find(function (d) { return d.display_name === ch.name; });
                         getData(("https://api.twitch.tv/helix/games?id=" + e_1.game_id), token, function (res) {
-                            main.emit('debug', new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, null, 0));
+                            main.emit(constants_1.TwitchRequestEvents.DEBUG, new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, null, 0));
                             if (e_1.is_live && !ch.isLive()) {
                                 getData(("https://api.twitch.tv/helix/streams?user_login=" + ch.name), token, function (r) {
                                     if (r.data === undefined) {
@@ -123,7 +143,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                                     else {
                                         var ee = r.data.find(function (d) { return d.user_name.toLowerCase() === ch.name; });
                                         if (ch.thumbnail !== ee.thumbnail_url) {
-                                            main.emit('live', new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, ee.thumbnail_url.replace('{width}', '320').replace('{height}', '180'), ee.viewer_count));
+                                            main.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, ee.thumbnail_url.replace('{width}', '320').replace('{height}', '180'), ee.viewer_count));
                                             ch.setTB(ee.thumbnail_url);
                                             ch.setLive();
                                         }
@@ -131,7 +151,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                                 });
                             }
                             else if (!e_1.is_live && ch.isLive()) {
-                                main.emit('unlive', new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, null, 0));
+                                main.emit(constants_1.TwitchRequestEvents.UNLIVE, new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, null, 0));
                                 ch.notLive();
                             }
                         });
@@ -140,6 +160,11 @@ var TwitchRequest = /** @class */ (function (_super) {
             });
         }, main.timeout);
     };
+    /**
+     *
+     * @param {string} username The username of the channel
+     * @returns {UserData}
+     */
     TwitchRequest.prototype.getUser = function (username) {
         return __awaiter(this, void 0, void 0, function () {
             var getToken, token, getData, cid, cs, int, time, promise;
@@ -210,6 +235,11 @@ var TwitchRequest = /** @class */ (function (_super) {
             });
         });
     };
+    /**
+     *
+     * @param {string} username The username of the channel
+     * @returns {StreamData}
+     */
     TwitchRequest.prototype.getStream = function (username) {
         return __awaiter(this, void 0, void 0, function () {
             var getToken, token, getData, cid, cs, int, time, promise;
@@ -248,7 +278,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                     Request.get(options, function (err, res, body) {
                         if (err)
                             return console.log(err);
-                        callback(JSON.parse(body));
+                        callback((JSON.parse(body)));
                     });
                 };
                 cid = this.clientid;
@@ -257,6 +287,9 @@ var TwitchRequest = /** @class */ (function (_super) {
                 time = this.timeout;
                 promise = new Promise(function (resolve, reject) {
                     setTimeout(function () {
+                        /**
+                         * @type {StreamData}
+                         */
                         var user = null;
                         getData(("https://api.twitch.tv/helix/streams?user_login=" + username.toLowerCase()), token, function (response) {
                             if (response.data === undefined) {
@@ -265,7 +298,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                             }
                             else {
                                 console.log(response.data);
-                                var pfp;
+                                var pfp = "";
                                 getData(("https://api.twitch.tv/helix/search/channels?query=" + username), token, function (res) {
                                     var ee = res.data.find(function (d) { return d.display_name === username; });
                                     pfp = ee.thumbnail_url;
@@ -285,12 +318,33 @@ var TwitchRequest = /** @class */ (function (_super) {
 }(events_1.EventEmitter));
 var StreamData = /** @class */ (function () {
     function StreamData(r, n, t, g, pfp, tb, v) {
+        /**
+         * @type {any} Raw Data
+         */
         this.raw = r;
+        /**
+         * @type {string} The channel name
+         */
         this.name = n;
+        /**
+         * @type {string} The stream title
+         */
         this.title = t;
+        /**
+         * @type {string} The currently playing game
+         */
         this.game = g;
+        /**
+         * @type {URL} The channel's profile picture
+         */
         this.profile = pfp;
+        /**
+         * @type {URL} The channel's thumbnail
+         */
         this.thumbnail = tb;
+        /**
+         * @type {Date} The date when the stream started
+         */
         this.date = new Date();
         this.viewers = v;
         if (!isEmpty(r.started_at)) {
