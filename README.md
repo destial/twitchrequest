@@ -6,7 +6,7 @@ Twitch Requests is basically an advanced EventEmitter which adds a 'live' listen
 `npm install twitchrequest`
 
 ```
-const { TwitchRequests } = require('twitchrequests');
+const { TwitchRequest } = require('twitchrequest');
 
 const options = {
     // The channels you are listening to (all in lowercase)
@@ -21,7 +21,7 @@ const options = {
     // The interval it will check (in seconds)
     interval: 15
 };
-const client = new TwitchRequests(options);
+const client = new TwitchRequest(options);
 
 client.on('live', (data) => {
     console.log(`${data.name} is now live! Streaming ${data.title} on ${data.game}! Started at ${data.date}`);

@@ -15,12 +15,16 @@ declare module 'twitchrequest' {
         private interval: number;
         private timeout: number;
         constructor(options: TwitchRequestOptions);
-        
+
         public once<K extends keyof TwitchRequestEvents>(event: K, listener: (...args: TwitchRequestEvents[K]) => void): this;
         public on<K extends keyof TwitchRequestEvents>(event: K, listener: (...args: TwitchRequestEvents[K]) => void): this;
 
         public getUser(username: string): Promise<UserData>;
         public getStream(username: string): Promise<StreamData>;
+        public addChannel(channel: string): void;
+        public removeChannel(channel: string): void;
+        public includesChannel(channel: string): boolean;
+        private getTwitchChannel(channel: string): TwitchChannel;
     }    
 
     export class StreamData {

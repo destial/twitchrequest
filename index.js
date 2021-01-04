@@ -60,73 +60,20 @@ var TwitchRequest = /** @class */ (function (_super) {
          * @private
          */
         _this.listener = function () { return __awaiter(_this, void 0, void 0, function () {
-            var getToken, token, getData;
+            var token;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0:
-                        getToken = function () { return __awaiter(_this, void 0, void 0, function () {
-                            var promise;
-                            var _this = this;
-                            return __generator(this, function (_a) {
-                                promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                                    var options;
-                                    return __generator(this, function (_a) {
-                                        options = {
-                                            url: "https://id.twitch.tv/oauth2/token",
-                                            json: true,
-                                            body: {
-                                                client_id: this.clientid,
-                                                client_secret: this.clientsecret,
-                                                grant_type: 'client_credentials'
-                                            }
-                                        };
-                                        Request.post(options, function (err, res, body) {
-                                            if (err)
-                                                return console.log(err);
-                                            resolve(res.body.access_token);
-                                        });
-                                        return [2 /*return*/];
-                                    });
-                                }); });
-                                return [2 /*return*/, promise];
-                            });
-                        }); };
-                        return [4 /*yield*/, getToken()];
+                    case 0: return [4 /*yield*/, this.getToken()];
                     case 1:
                         token = _a.sent();
-                        getData = function (url, token) {
-                            var promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                                var options;
-                                return __generator(this, function (_a) {
-                                    options = {
-                                        url: url,
-                                        method: 'GET',
-                                        headers: {
-                                            'client-id': this.clientid,
-                                            'Authorization': 'Bearer ' + token
-                                        }
-                                    };
-                                    Request.get(options, function (err, res, body) {
-                                        if (err) {
-                                            reject(err);
-                                        }
-                                        else {
-                                            resolve(JSON.parse(body));
-                                        }
-                                    });
-                                    return [2 /*return*/];
-                                });
-                            }); });
-                            return promise;
-                        };
                         this.channel.forEach(function (ch) { return __awaiter(_this, void 0, void 0, function () {
                             var response, e, res, r, ee, err_1;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         _a.trys.push([0, 7, , 8]);
-                                        return [4 /*yield*/, getData(("https://api.twitch.tv/helix/search/channels?query=" + ch.name), token)];
+                                        return [4 /*yield*/, this.getData(("https://api.twitch.tv/helix/search/channels?query=" + ch.name), token)];
                                     case 1:
                                         response = _a.sent();
                                         if (!(response.data === undefined)) return [3 /*break*/, 2];
@@ -134,12 +81,12 @@ var TwitchRequest = /** @class */ (function (_super) {
                                         return [3 /*break*/, 6];
                                     case 2:
                                         e = response.data.find(function (d) { return d.display_name === ch.name; });
-                                        return [4 /*yield*/, getData(("https://api.twitch.tv/helix/games?id=" + e.game_id), token)];
+                                        return [4 /*yield*/, this.getData(("https://api.twitch.tv/helix/games?id=" + e.game_id), token)];
                                     case 3:
                                         res = _a.sent();
                                         this.emit(constants_1.TwitchRequestEvents.DEBUG, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, null, 0));
                                         if (!(e.is_live && !ch.isLive())) return [3 /*break*/, 5];
-                                        return [4 /*yield*/, getData(("https://api.twitch.tv/helix/streams?user_login=" + ch.name), token)];
+                                        return [4 /*yield*/, this.getData(("https://api.twitch.tv/helix/streams?user_login=" + ch.name), token)];
                                     case 4:
                                         r = _a.sent();
                                         if (r.data === undefined) {
@@ -210,77 +157,16 @@ var TwitchRequest = /** @class */ (function (_super) {
             var _this = this;
             return __generator(this, function (_a) {
                 promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                    var getToken, token, getData, user, response, e, err_2;
-                    var _this = this;
+                    var token, user, response, e, err_2;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0:
-                                getToken = function () { return __awaiter(_this, void 0, void 0, function () {
-                                    var prom;
-                                    var _this = this;
-                                    return __generator(this, function (_a) {
-                                        prom = new Promise(function (resolv, rej) { return __awaiter(_this, void 0, void 0, function () {
-                                            var options;
-                                            return __generator(this, function (_a) {
-                                                options = {
-                                                    url: "https://id.twitch.tv/oauth2/token",
-                                                    json: true,
-                                                    body: {
-                                                        client_id: this.clientid,
-                                                        client_secret: this.clientsecret,
-                                                        grant_type: 'client_credentials'
-                                                    }
-                                                };
-                                                Request.post(options, function (err, res, body) {
-                                                    if (err) {
-                                                        resolv("Error");
-                                                    }
-                                                    else {
-                                                        resolv(res.body.access_token);
-                                                    }
-                                                });
-                                                return [2 /*return*/];
-                                            });
-                                        }); });
-                                        return [2 /*return*/, prom];
-                                    });
-                                }); };
-                                return [4 /*yield*/, getToken()];
+                            case 0: return [4 /*yield*/, this.getToken()];
                             case 1:
                                 token = _a.sent();
-                                getData = function (url, token) { return __awaiter(_this, void 0, void 0, function () {
-                                    var promise;
-                                    var _this = this;
-                                    return __generator(this, function (_a) {
-                                        promise = new Promise(function (reso, reje) { return __awaiter(_this, void 0, void 0, function () {
-                                            var options;
-                                            return __generator(this, function (_a) {
-                                                options = {
-                                                    url: url,
-                                                    method: 'GET',
-                                                    headers: {
-                                                        'client-id': this.clientid,
-                                                        'Authorization': 'Bearer ' + token
-                                                    }
-                                                };
-                                                Request.get(options, function (err, res, body) {
-                                                    if (err) {
-                                                        reje(err);
-                                                    }
-                                                    else {
-                                                        reso((JSON.parse(body)));
-                                                    }
-                                                });
-                                                return [2 /*return*/];
-                                            });
-                                        }); });
-                                        return [2 /*return*/, promise];
-                                    });
-                                }); };
                                 _a.label = 2;
                             case 2:
                                 _a.trys.push([2, 4, , 5]);
-                                return [4 /*yield*/, getData(("https://api.twitch.tv/helix/users?login=" + username), token)];
+                                return [4 /*yield*/, this.getData(("https://api.twitch.tv/helix/users?login=" + username), token)];
                             case 3:
                                 response = _a.sent();
                                 if (response.data === undefined) {
@@ -327,77 +213,16 @@ var TwitchRequest = /** @class */ (function (_super) {
             var _this = this;
             return __generator(this, function (_a) {
                 promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                    var getToken, token, getData, user, response, e, res, ee, err_3;
-                    var _this = this;
+                    var token, user, response, e, res, ee, err_3;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0:
-                                getToken = function () { return __awaiter(_this, void 0, void 0, function () {
-                                    var prom;
-                                    var _this = this;
-                                    return __generator(this, function (_a) {
-                                        prom = new Promise(function (resolv, rej) { return __awaiter(_this, void 0, void 0, function () {
-                                            var options;
-                                            return __generator(this, function (_a) {
-                                                options = {
-                                                    url: "https://id.twitch.tv/oauth2/token",
-                                                    json: true,
-                                                    body: {
-                                                        client_id: this.clientid,
-                                                        client_secret: this.clientsecret,
-                                                        grant_type: 'client_credentials'
-                                                    }
-                                                };
-                                                Request.post(options, function (err, res, body) {
-                                                    if (err) {
-                                                        resolv("Error");
-                                                    }
-                                                    else {
-                                                        resolv(res.body.access_token);
-                                                    }
-                                                });
-                                                return [2 /*return*/];
-                                            });
-                                        }); });
-                                        return [2 /*return*/, prom];
-                                    });
-                                }); };
-                                return [4 /*yield*/, getToken()];
+                            case 0: return [4 /*yield*/, this.getToken()];
                             case 1:
                                 token = _a.sent();
-                                getData = function (url, token) { return __awaiter(_this, void 0, void 0, function () {
-                                    var promise;
-                                    var _this = this;
-                                    return __generator(this, function (_a) {
-                                        promise = new Promise(function (reso, reje) { return __awaiter(_this, void 0, void 0, function () {
-                                            var options;
-                                            return __generator(this, function (_a) {
-                                                options = {
-                                                    url: url,
-                                                    method: 'GET',
-                                                    headers: {
-                                                        'client-id': this.clientid,
-                                                        'Authorization': 'Bearer ' + token
-                                                    }
-                                                };
-                                                Request.get(options, function (err, res, body) {
-                                                    if (err) {
-                                                        reje(err);
-                                                    }
-                                                    else {
-                                                        reso((JSON.parse(body)));
-                                                    }
-                                                });
-                                                return [2 /*return*/];
-                                            });
-                                        }); });
-                                        return [2 /*return*/, promise];
-                                    });
-                                }); };
                                 _a.label = 2;
                             case 2:
                                 _a.trys.push([2, 7, , 8]);
-                                return [4 /*yield*/, getData(("https://api.twitch.tv/helix/streams?user_login=" + username.toLowerCase()), token)];
+                                return [4 /*yield*/, this.getData(("https://api.twitch.tv/helix/streams?user_login=" + username.toLowerCase()), token)];
                             case 3:
                                 response = _a.sent();
                                 if (!(response.data === undefined)) return [3 /*break*/, 4];
@@ -405,15 +230,11 @@ var TwitchRequest = /** @class */ (function (_super) {
                                 resolve(user);
                                 return [3 /*break*/, 6];
                             case 4:
-                                e = response.data.find(function (d) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                                    return [2 /*return*/, d.user_name.toLowerCase() === username];
-                                }); }); });
-                                return [4 /*yield*/, getData(("https://api.twitch.tv/helix/search/channels?query=" + username), token)];
+                                e = response.data.find(function (d) { return d.user_name.toLowerCase() === username; });
+                                return [4 /*yield*/, this.getData(("https://api.twitch.tv/helix/search/channels?query=" + username), token)];
                             case 5:
                                 res = _a.sent();
-                                ee = res.data.find(function (d) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                                    return [2 /*return*/, d.display_name.toLowerCase() === username];
-                                }); }); });
+                                ee = res.data.find(function (d) { return d.display_name.toLowerCase() === username; });
                                 user = new StreamData(e, e.user_name.toLowerCase(), e.title, e.game_name, ee.thumbnail_url, e.thumbnail_url.replace('{width}', '440').replace('{height}', '248'), e.viewer_count);
                                 resolve(user);
                                 _a.label = 6;
@@ -424,6 +245,73 @@ var TwitchRequest = /** @class */ (function (_super) {
                                 return [3 /*break*/, 8];
                             case 8: return [2 /*return*/];
                         }
+                    });
+                }); });
+                return [2 /*return*/, promise];
+            });
+        }); };
+        /**
+         * @private
+         */
+        _this.getToken = function () { return __awaiter(_this, void 0, void 0, function () {
+            var promise;
+            var _this = this;
+            return __generator(this, function (_a) {
+                promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                    var options;
+                    return __generator(this, function (_a) {
+                        options = {
+                            url: "https://id.twitch.tv/oauth2/token",
+                            json: true,
+                            body: {
+                                client_id: this.clientid,
+                                client_secret: this.clientsecret,
+                                grant_type: 'client_credentials'
+                            }
+                        };
+                        Request.post(options, function (err, res, body) {
+                            if (err) {
+                                resolve("Error");
+                            }
+                            else {
+                                resolve(res.body.access_token);
+                            }
+                        });
+                        return [2 /*return*/];
+                    });
+                }); });
+                return [2 /*return*/, promise];
+            });
+        }); };
+        /**
+         * @private
+         * @param url URL
+         * @param token Token
+         */
+        _this.getData = function (url, token) { return __awaiter(_this, void 0, void 0, function () {
+            var promise;
+            var _this = this;
+            return __generator(this, function (_a) {
+                promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                    var options;
+                    return __generator(this, function (_a) {
+                        options = {
+                            url: url,
+                            method: 'GET',
+                            headers: {
+                                'client-id': this.clientid,
+                                'Authorization': 'Bearer ' + token
+                            }
+                        };
+                        Request.get(options, function (err, res, body) {
+                            if (err) {
+                                reject(err);
+                            }
+                            else {
+                                resolve((JSON.parse(body)));
+                            }
+                        });
+                        return [2 /*return*/];
                     });
                 }); });
                 return [2 /*return*/, promise];
