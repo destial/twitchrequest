@@ -1,6 +1,6 @@
 {
   "name": "twitchrequest",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "Get Twitch requests for streams, especially when a stream goes live or stops streaming",
   "main": "index.js",
   "directories": {

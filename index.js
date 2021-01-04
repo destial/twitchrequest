@@ -56,6 +56,379 @@ var TwitchRequest = /** @class */ (function (_super) {
     __extends(TwitchRequest, _super);
     function TwitchRequest(options) {
         var _this = _super.call(this) || this;
+        /**
+         * @private
+         */
+        _this.listener = function () { return __awaiter(_this, void 0, void 0, function () {
+            var getToken, token, getData;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        getToken = function () { return __awaiter(_this, void 0, void 0, function () {
+                            var promise;
+                            var _this = this;
+                            return __generator(this, function (_a) {
+                                promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                                    var options;
+                                    return __generator(this, function (_a) {
+                                        options = {
+                                            url: "https://id.twitch.tv/oauth2/token",
+                                            json: true,
+                                            body: {
+                                                client_id: this.clientid,
+                                                client_secret: this.clientsecret,
+                                                grant_type: 'client_credentials'
+                                            }
+                                        };
+                                        Request.post(options, function (err, res, body) {
+                                            if (err)
+                                                return console.log(err);
+                                            resolve(res.body.access_token);
+                                        });
+                                        return [2 /*return*/];
+                                    });
+                                }); });
+                                return [2 /*return*/, promise];
+                            });
+                        }); };
+                        return [4 /*yield*/, getToken()];
+                    case 1:
+                        token = _a.sent();
+                        getData = function (url, token) {
+                            var promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                                var options;
+                                return __generator(this, function (_a) {
+                                    options = {
+                                        url: url,
+                                        method: 'GET',
+                                        headers: {
+                                            'client-id': this.clientid,
+                                            'Authorization': 'Bearer ' + token
+                                        }
+                                    };
+                                    Request.get(options, function (err, res, body) {
+                                        if (err) {
+                                            reject(err);
+                                        }
+                                        else {
+                                            resolve(JSON.parse(body));
+                                        }
+                                    });
+                                    return [2 /*return*/];
+                                });
+                            }); });
+                            return promise;
+                        };
+                        this.channel.forEach(function (ch) { return __awaiter(_this, void 0, void 0, function () {
+                            var response, e, res, r, ee, err_1;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        _a.trys.push([0, 7, , 8]);
+                                        return [4 /*yield*/, getData(("https://api.twitch.tv/helix/search/channels?query=" + ch.name), token)];
+                                    case 1:
+                                        response = _a.sent();
+                                        if (!(response.data === undefined)) return [3 /*break*/, 2];
+                                        console.log("Error! {channel=" + ch.name + ", clientid=" + this.clientid + ", clientsecret=" + this.clientsecret + ", interval=" + this.interval + "}");
+                                        return [3 /*break*/, 6];
+                                    case 2:
+                                        e = response.data.find(function (d) { return d.display_name === ch.name; });
+                                        return [4 /*yield*/, getData(("https://api.twitch.tv/helix/games?id=" + e.game_id), token)];
+                                    case 3:
+                                        res = _a.sent();
+                                        this.emit(constants_1.TwitchRequestEvents.DEBUG, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, null, 0));
+                                        if (!(e.is_live && !ch.isLive())) return [3 /*break*/, 5];
+                                        return [4 /*yield*/, getData(("https://api.twitch.tv/helix/streams?user_login=" + ch.name), token)];
+                                    case 4:
+                                        r = _a.sent();
+                                        if (r.data === undefined) {
+                                            console.log("Error! {channel=" + ch.name + ", clientid=" + this.clientid + ", clientsecret=" + this.clientsecret + ", interval=" + this.interval + "}");
+                                        }
+                                        else {
+                                            ee = r.data.find(function (d) { return d.user_name.toLowerCase() === ch.name; });
+                                            this.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248'), ee.viewer_count));
+                                            ch.setLive();
+                                        }
+                                        return [3 /*break*/, 6];
+                                    case 5:
+                                        if (!e.is_live && ch.isLive()) {
+                                            this.emit(constants_1.TwitchRequestEvents.UNLIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, null, 0));
+                                            ch.notLive();
+                                        }
+                                        _a.label = 6;
+                                    case 6: return [3 /*break*/, 8];
+                                    case 7:
+                                        err_1 = _a.sent();
+                                        console.log(err_1);
+                                        return [3 /*break*/, 8];
+                                    case 8: return [2 /*return*/];
+                                }
+                            });
+                        }); });
+                        return [2 /*return*/];
+                }
+            });
+        }); };
+        /**
+         * Adds a channel to the client to listen to
+         * @param channel A Twitch channel name
+         */
+        _this.addChannel = function (channel) {
+            if (_this.channel.find(function (tch) { return tch.name === channel.toLowerCase(); }))
+                return;
+            var twitchChannel = new TwitchChannel(channel.toLowerCase());
+            _this.channel.push(twitchChannel);
+        };
+        /**
+         * Removes a channel from the client to listen to
+         * @param channel A Twitch channel name
+         */
+        _this.removeChannel = function (channel) {
+            if (!(_this.channel.find(function (tch) { return tch.name === channel.toLowerCase(); })))
+                return;
+            var twitchChannel = _this.channel.find(function (tch) { return tch.name === channel.toLowerCase(); });
+            var index = _this.channel.indexOf(twitchChannel);
+            if (index !== -1) {
+                _this.channel.splice(index, 1);
+            }
+        };
+        /**
+         * Check if a channel is included in the client's lists
+         * @param channel A Twitch channel name
+         */
+        _this.includesChannel = function (channel) {
+            return (_this.channel.find(function (tch) { return tch.name === channel.toLowerCase(); }) ? true : false);
+        };
+        /**
+         *
+         * @param {string} username The username of the channel
+         * @returns {Promise<UserData>} s
+         */
+        _this.getUser = function (username) { return __awaiter(_this, void 0, void 0, function () {
+            var promise;
+            var _this = this;
+            return __generator(this, function (_a) {
+                promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                    var getToken, token, getData, user, response, e, err_2;
+                    var _this = this;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                getToken = function () { return __awaiter(_this, void 0, void 0, function () {
+                                    var prom;
+                                    var _this = this;
+                                    return __generator(this, function (_a) {
+                                        prom = new Promise(function (resolv, rej) { return __awaiter(_this, void 0, void 0, function () {
+                                            var options;
+                                            return __generator(this, function (_a) {
+                                                options = {
+                                                    url: "https://id.twitch.tv/oauth2/token",
+                                                    json: true,
+                                                    body: {
+                                                        client_id: this.clientid,
+                                                        client_secret: this.clientsecret,
+                                                        grant_type: 'client_credentials'
+                                                    }
+                                                };
+                                                Request.post(options, function (err, res, body) {
+                                                    if (err) {
+                                                        resolv("Error");
+                                                    }
+                                                    else {
+                                                        resolv(res.body.access_token);
+                                                    }
+                                                });
+                                                return [2 /*return*/];
+                                            });
+                                        }); });
+                                        return [2 /*return*/, prom];
+                                    });
+                                }); };
+                                return [4 /*yield*/, getToken()];
+                            case 1:
+                                token = _a.sent();
+                                getData = function (url, token) { return __awaiter(_this, void 0, void 0, function () {
+                                    var promise;
+                                    var _this = this;
+                                    return __generator(this, function (_a) {
+                                        promise = new Promise(function (reso, reje) { return __awaiter(_this, void 0, void 0, function () {
+                                            var options;
+                                            return __generator(this, function (_a) {
+                                                options = {
+                                                    url: url,
+                                                    method: 'GET',
+                                                    headers: {
+                                                        'client-id': this.clientid,
+                                                        'Authorization': 'Bearer ' + token
+                                                    }
+                                                };
+                                                Request.get(options, function (err, res, body) {
+                                                    if (err) {
+                                                        reje(err);
+                                                    }
+                                                    else {
+                                                        reso((JSON.parse(body)));
+                                                    }
+                                                });
+                                                return [2 /*return*/];
+                                            });
+                                        }); });
+                                        return [2 /*return*/, promise];
+                                    });
+                                }); };
+                                _a.label = 2;
+                            case 2:
+                                _a.trys.push([2, 4, , 5]);
+                                return [4 /*yield*/, getData(("https://api.twitch.tv/helix/users?login=" + username), token)];
+                            case 3:
+                                response = _a.sent();
+                                if (response.data === undefined) {
+                                    console.log("Error! {channel=" + username + ", clientid=" + this.clientid + ", clientsecret=" + this.clientsecret + ", interval=" + this.interval + "}");
+                                    resolve(user);
+                                }
+                                else {
+                                    e = response.data.find(function (d) { return d.display_name.toLowerCase() === username; });
+                                    user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
+                                    resolve(user);
+                                }
+                                return [3 /*break*/, 5];
+                            case 4:
+                                err_2 = _a.sent();
+                                console.log(err_2);
+                                return [3 /*break*/, 5];
+                            case 5: return [2 /*return*/];
+                        }
+                    });
+                }); });
+                return [2 /*return*/, promise];
+            });
+        }); };
+        /**
+         * idk why you want this but here you go
+         * Gets the TwitchChannel stored in the client
+         * A TwitchChannel object is stored as:
+         * `{
+         *  name: string,
+         *  live: boolean
+         * }`
+         * @param channel The username of the channel
+         */
+        _this.getTwitchChannel = function (channel) {
+            return _this.channel.find(function (tch) { return tch.name === channel.toLowerCase(); });
+        };
+        /**
+         *
+         * @param {string} username The username of the channel
+         * @returns {Promise<StreamData>}
+         */
+        _this.getStream = function (username) { return __awaiter(_this, void 0, void 0, function () {
+            var promise;
+            var _this = this;
+            return __generator(this, function (_a) {
+                promise = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                    var getToken, token, getData, user, response, e, res, ee, err_3;
+                    var _this = this;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                getToken = function () { return __awaiter(_this, void 0, void 0, function () {
+                                    var prom;
+                                    var _this = this;
+                                    return __generator(this, function (_a) {
+                                        prom = new Promise(function (resolv, rej) { return __awaiter(_this, void 0, void 0, function () {
+                                            var options;
+                                            return __generator(this, function (_a) {
+                                                options = {
+                                                    url: "https://id.twitch.tv/oauth2/token",
+                                                    json: true,
+                                                    body: {
+                                                        client_id: this.clientid,
+                                                        client_secret: this.clientsecret,
+                                                        grant_type: 'client_credentials'
+                                                    }
+                                                };
+                                                Request.post(options, function (err, res, body) {
+                                                    if (err) {
+                                                        resolv("Error");
+                                                    }
+                                                    else {
+                                                        resolv(res.body.access_token);
+                                                    }
+                                                });
+                                                return [2 /*return*/];
+                                            });
+                                        }); });
+                                        return [2 /*return*/, prom];
+                                    });
+                                }); };
+                                return [4 /*yield*/, getToken()];
+                            case 1:
+                                token = _a.sent();
+                                getData = function (url, token) { return __awaiter(_this, void 0, void 0, function () {
+                                    var promise;
+                                    var _this = this;
+                                    return __generator(this, function (_a) {
+                                        promise = new Promise(function (reso, reje) { return __awaiter(_this, void 0, void 0, function () {
+                                            var options;
+                                            return __generator(this, function (_a) {
+                                                options = {
+                                                    url: url,
+                                                    method: 'GET',
+                                                    headers: {
+                                                        'client-id': this.clientid,
+                                                        'Authorization': 'Bearer ' + token
+                                                    }
+                                                };
+                                                Request.get(options, function (err, res, body) {
+                                                    if (err) {
+                                                        reje(err);
+                                                    }
+                                                    else {
+                                                        reso((JSON.parse(body)));
+                                                    }
+                                                });
+                                                return [2 /*return*/];
+                                            });
+                                        }); });
+                                        return [2 /*return*/, promise];
+                                    });
+                                }); };
+                                _a.label = 2;
+                            case 2:
+                                _a.trys.push([2, 7, , 8]);
+                                return [4 /*yield*/, getData(("https://api.twitch.tv/helix/streams?user_login=" + username.toLowerCase()), token)];
+                            case 3:
+                                response = _a.sent();
+                                if (!(response.data === undefined)) return [3 /*break*/, 4];
+                                console.log("Error! {channel=" + username + ", clientid=" + this.clientid + ", clientsecret=" + this.clientsecret + ", interval=" + this.interval + "}");
+                                resolve(user);
+                                return [3 /*break*/, 6];
+                            case 4:
+                                e = response.data.find(function (d) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                    return [2 /*return*/, d.user_name.toLowerCase() === username];
+                                }); }); });
+                                return [4 /*yield*/, getData(("https://api.twitch.tv/helix/search/channels?query=" + username), token)];
+                            case 5:
+                                res = _a.sent();
+                                ee = res.data.find(function (d) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                    return [2 /*return*/, d.display_name.toLowerCase() === username];
+                                }); }); });
+                                user = new StreamData(e, e.user_name.toLowerCase(), e.title, e.game_name, ee.thumbnail_url, e.thumbnail_url.replace('{width}', '440').replace('{height}', '248'), e.viewer_count);
+                                resolve(user);
+                                _a.label = 6;
+                            case 6: return [3 /*break*/, 8];
+                            case 7:
+                                err_3 = _a.sent();
+                                console.log(err_3);
+                                return [3 /*break*/, 8];
+                            case 8: return [2 /*return*/];
+                        }
+                    });
+                }); });
+                return [2 /*return*/, promise];
+            });
+        }); };
         _this.interval = options.interval * 1000 || 30000;
         _this.channel = [];
         options.channels.forEach(function (ch) {
@@ -64,279 +437,9 @@ var TwitchRequest = /** @class */ (function (_super) {
         });
         _this.clientid = options.client_id || null;
         _this.clientsecret = options.client_secret || null;
-        _this.timeout = options.timeout * 1000 || 5000;
-        setInterval(_this.listener, _this.interval, _this);
+        setInterval(_this.listener, _this.interval);
         return _this;
     }
-    /**
-     * @private
-     * @param {TwitchRequest} main
-     */
-    TwitchRequest.prototype.listener = function (main) {
-        var _this = this;
-        var getToken = function (callback) {
-            var options = {
-                url: "https://id.twitch.tv/oauth2/token",
-                json: true,
-                body: {
-                    client_id: main.clientid,
-                    client_secret: main.clientsecret,
-                    grant_type: 'client_credentials'
-                }
-            };
-            Request.post(options, function (err, res, body) {
-                if (err)
-                    return console.log(err);
-                callback(res.body.access_token);
-            });
-        };
-        var token = "";
-        getToken(function (t) {
-            token = t;
-            return t;
-        });
-        var getData = function (url, token, callback) {
-            var options = {
-                url: url,
-                method: 'GET',
-                headers: {
-                    'client-id': main.clientid,
-                    'Authorization': 'Bearer ' + token
-                }
-            };
-            Request.get(options, function (err, res, body) {
-                if (err)
-                    return console.log(err);
-                callback(JSON.parse(body));
-            });
-        };
-        setTimeout(function () {
-            main.channel.forEach(function (ch) {
-                getData(("https://api.twitch.tv/helix/search/channels?query=" + ch.name), token, function (response) {
-                    if (response.data === undefined) {
-                        console.log("Error! {channel=" + ch.name + ", clientid=" + main.clientid + ", clientsecret=" + main.clientsecret + ", interval=" + main.interval + ", timeout=" + main.timeout + "}");
-                    }
-                    else {
-                        var e_1 = response.data.find(function (d) { return d.display_name === ch.name; });
-                        getData(("https://api.twitch.tv/helix/games?id=" + e_1.game_id), token, function (res) {
-                            main.emit(constants_1.TwitchRequestEvents.DEBUG, new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, null, 0));
-                            if (e_1.is_live && !ch.isLive()) {
-                                getData(("https://api.twitch.tv/helix/streams?user_login=" + ch.name), token, function (r) {
-                                    if (r.data === undefined) {
-                                        console.log("Error! {channel=" + ch.name + ", clientid=" + _this.clientid + ", clientsecret=" + _this.clientsecret + ", interval=" + _this.interval + ", timeout=" + main.timeout + "}");
-                                    }
-                                    else {
-                                        var ee = r.data.find(function (d) { return d.user_name.toLowerCase() === ch.name; });
-                                        main.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, ee.thumbnail_url.replace('{width}', '320').replace('{height}', '180'), ee.viewer_count));
-                                        ch.setLive();
-                                    }
-                                });
-                            }
-                            else if (!e_1.is_live && ch.isLive()) {
-                                main.emit(constants_1.TwitchRequestEvents.UNLIVE, new StreamData(e_1, e_1.display_name, e_1.title, res.data[0].name, e_1.thumbnail_url, null, 0));
-                                ch.notLive();
-                            }
-                        });
-                    }
-                });
-            });
-        }, main.timeout);
-    };
-    /**
-     *
-     * @param {string} username The username of the channel
-     * @returns {Promise<UserData>}
-     */
-    TwitchRequest.prototype.getUser = function (username) {
-        return __awaiter(this, void 0, void 0, function () {
-            var cid, cs, int, time, promise;
-            return __generator(this, function (_a) {
-                cid = this.clientid;
-                cs = this.clientsecret;
-                int = this.interval;
-                time = this.timeout;
-                promise = new Promise(function (resolve, reject) {
-                    return __awaiter(this, void 0, void 0, function () {
-                        function getToken() {
-                            return __awaiter(this, void 0, void 0, function () {
-                                var prom;
-                                return __generator(this, function (_a) {
-                                    prom = new Promise(function (resolv, rej) {
-                                        return __awaiter(this, void 0, void 0, function () {
-                                            var options;
-                                            return __generator(this, function (_a) {
-                                                options = {
-                                                    url: "https://id.twitch.tv/oauth2/token",
-                                                    json: true,
-                                                    body: {
-                                                        client_id: cid,
-                                                        client_secret: cs,
-                                                        grant_type: 'client_credentials'
-                                                    }
-                                                };
-                                                Request.post(options, function (err, res, body) {
-                                                    if (err) {
-                                                        resolv("Error");
-                                                    }
-                                                    else {
-                                                        resolv(res.body.access_token);
-                                                    }
-                                                });
-                                                return [2 /*return*/];
-                                            });
-                                        });
-                                    });
-                                    return [2 /*return*/, prom];
-                                });
-                            });
-                        }
-                        var token, getData;
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0: return [4 /*yield*/, getToken()];
-                                case 1:
-                                    token = _a.sent();
-                                    getData = function (url, token, callback) {
-                                        var options = {
-                                            url: url,
-                                            method: 'GET',
-                                            headers: {
-                                                'client-id': cid,
-                                                'Authorization': 'Bearer ' + token
-                                            }
-                                        };
-                                        Request.get(options, function (err, res, body) {
-                                            if (err)
-                                                return console.log(err);
-                                            callback((JSON.parse(body)));
-                                        });
-                                    };
-                                    setTimeout(function () {
-                                        /**
-                                         * @type {UserData}
-                                         */
-                                        var user;
-                                        getData(("https://api.twitch.tv/helix/users?login=" + username), token, function (response) {
-                                            if (response.data === undefined) {
-                                                console.log("Error! {channel=" + username + ", clientid=" + cid + ", clientsecret=" + cs + ", interval=" + int + ", timeout=" + time + "}");
-                                                resolve(user);
-                                            }
-                                            else {
-                                                var e = response.data.find(function (d) { return d.display_name.toLowerCase() === username; });
-                                                user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
-                                                resolve(user);
-                                            }
-                                        });
-                                    }, time);
-                                    return [2 /*return*/];
-                            }
-                        });
-                    });
-                });
-                return [2 /*return*/, promise];
-            });
-        });
-    };
-    /**
-     *
-     * @param {string} username The username of the channel
-     * @returns {Promise<StreamData>}
-     */
-    TwitchRequest.prototype.getStream = function (username) {
-        return __awaiter(this, void 0, void 0, function () {
-            var cid, cs, int, time, promise;
-            return __generator(this, function (_a) {
-                cid = this.clientid;
-                cs = this.clientsecret;
-                int = this.interval;
-                time = this.timeout;
-                promise = new Promise(function (resolve, reject) {
-                    return __awaiter(this, void 0, void 0, function () {
-                        function getToken() {
-                            return __awaiter(this, void 0, void 0, function () {
-                                var prom;
-                                return __generator(this, function (_a) {
-                                    prom = new Promise(function (resolv, rej) {
-                                        return __awaiter(this, void 0, void 0, function () {
-                                            var options;
-                                            return __generator(this, function (_a) {
-                                                options = {
-                                                    url: "https://id.twitch.tv/oauth2/token",
-                                                    json: true,
-                                                    body: {
-                                                        client_id: cid,
-                                                        client_secret: cs,
-                                                        grant_type: 'client_credentials'
-                                                    }
-                                                };
-                                                Request.post(options, function (err, res, body) {
-                                                    if (err) {
-                                                        resolv("Error");
-                                                    }
-                                                    else {
-                                                        resolv(res.body.access_token);
-                                                    }
-                                                });
-                                                return [2 /*return*/];
-                                            });
-                                        });
-                                    });
-                                    return [2 /*return*/, prom];
-                                });
-                            });
-                        }
-                        var token, getData;
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0: return [4 /*yield*/, getToken()];
-                                case 1:
-                                    token = _a.sent();
-                                    getData = function (url, token, callback) {
-                                        var options = {
-                                            url: url,
-                                            method: 'GET',
-                                            headers: {
-                                                'client-id': cid,
-                                                'Authorization': 'Bearer ' + token
-                                            }
-                                        };
-                                        Request.get(options, function (err, res, body) {
-                                            if (err)
-                                                return console.log(err);
-                                            callback((JSON.parse(body)));
-                                        });
-                                    };
-                                    setTimeout(function () {
-                                        /**
-                                         * @type {StreamData}
-                                         */
-                                        var user;
-                                        getData(("https://api.twitch.tv/helix/streams?user_login=" + username.toLowerCase()), token, function (response) {
-                                            if (response.data === undefined) {
-                                                console.log("Error! {channel=" + username + ", clientid=" + cid + ", clientsecret=" + cs + ", interval=" + int + ". timeout=" + time + "}");
-                                                resolve(user);
-                                            }
-                                            else {
-                                                var pfp = "";
-                                                getData(("https://api.twitch.tv/helix/search/channels?query=" + username), token, function (res) {
-                                                    var ee = res.data.find(function (d) { return d.display_name.toLowerCase() === username; });
-                                                    pfp = ee.thumbnail_url;
-                                                });
-                                                var e = response.data.find(function (d) { return d.user_name.toLowerCase() === username; });
-                                                user = new StreamData(e, e.user_name.toLowerCase(), e.title, e.game_name, pfp, e.thumbnail_url.replace('{width}', '320').replace('{height}', '180'), e.viewer_count);
-                                                resolve(user);
-                                            }
-                                        });
-                                    }, time);
-                                    return [2 /*return*/];
-                            }
-                        });
-                    });
-                });
-                return [2 /*return*/, promise];
-            });
-        });
-    };
     return TwitchRequest;
 }(events_1.EventEmitter));
 var StreamData = /** @class */ (function () {
@@ -378,12 +481,21 @@ var TwitchChannel = /** @class */ (function () {
         this.name = n;
         this.live = false;
     }
+    /**
+     * **DO NOT USE THIS METHOD OR IT WILL MESS UP THE CLIENT**
+     */
     TwitchChannel.prototype.setLive = function () {
         this.live = true;
     };
+    /**
+     * **DO NOT USE THIS METHOD OR IT WILL MESS UP THE CLIENT**
+     */
     TwitchChannel.prototype.notLive = function () {
         this.live = false;
     };
+    /**
+     * Check if the channel is live according to the client
+     */
     TwitchChannel.prototype.isLive = function () {
         return this.live;
     };

@@ -6,7 +6,6 @@ declare module 'twitchrequest' {
         channels: string[],
         client_id: string,
         client_secret: string,
-        timeout?: number
     }
 
     export class TwitchRequest extends EventEmitter {
@@ -15,7 +14,8 @@ declare module 'twitchrequest' {
         private clientsecret: string;
         private interval: number;
         private timeout: number;
-
+        constructor(options: TwitchRequestOptions);
+        
         public once<K extends keyof TwitchRequestEvents>(event: K, listener: (...args: TwitchRequestEvents[K]) => void): this;
         public on<K extends keyof TwitchRequestEvents>(event: K, listener: (...args: TwitchRequestEvents[K]) => void): this;
 

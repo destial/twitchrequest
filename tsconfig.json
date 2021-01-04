@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
         "pretty": true,
-        "target": "ES6",
+        "target": "ES2018",
         "watch": true,
-        "lib": ["ES6", "DOM", "ES2019"],
+        "lib": ["ES6", "ES2018", "DOM", "ES2019"],
         "moduleResolution": "node",
         "removeComments": false
     }
