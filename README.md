@@ -19,10 +19,7 @@ const options = {
     client_secret: "your client secret",
 
     // The interval it will check (in seconds)
-    interval: 15,
-
-    // Increase this time if your internet connection is slower (if not set, defaults to 3 seconds)
-    timeout: 7
+    interval: 15
 };
 const client = new TwitchRequests(options);
 
