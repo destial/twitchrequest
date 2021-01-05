@@ -21,10 +21,11 @@ declare module 'twitchrequest' {
 
         public getUser(username: string): Promise<UserData>;
         public getStream(username: string): Promise<StreamData>;
+        public getFollows(username: string): Promise<number>;
         public addChannel(channel: string): void;
         public removeChannel(channel: string): void;
         public includesChannel(channel: string): boolean;
-        private getTwitchChannel(channel: string): TwitchChannel;
+        public getTwitchChannel(channel: string): TwitchChannel;
     }    
 
     export class StreamData {
@@ -52,10 +53,12 @@ declare module 'twitchrequest' {
         live: [StreamData];
         unlive: [StreamData];
         debug: [StreamData];
+        follow: [UserData, StreamData];
     }
 
     export class TwitchChannel {
         name: string;
+        isLoaded: boolean;
         private live: boolean;
     }
     

@@ -19,7 +19,7 @@ const options = {
     client_secret: "your client secret",
 
     // The interval it will check (in seconds)
-    interval: 15
+    interval: 3
 };
 const client = new TwitchRequest(options);
 
@@ -44,12 +44,22 @@ client.on('unlive', (streamData) => {
 });
 ```
 
+This event is called when a user follows a channel *EXPERIMENTAL*.
+```
+client.on('follow', (userData, streamData) => {
+    // userData is the user that followed
+    // streamData is the StreamData that the user followed to
+});
+```
+
 This event is called every interval set in the options.
 ```
 client.on('debug', (streamData) => {
     // Do stuff
 });
 ```
+
+If you want subscription events or chat events, use `npm i tmi.js` instead!
 
 # Methods
 
