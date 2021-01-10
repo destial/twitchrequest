@@ -85,7 +85,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                                     case 3:
                                         res = _a.sent();
                                         this.emit(constants_1.TwitchRequestEvents.DEBUG, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, null, 0));
-                                        if (!(e.is_live && !ch.isLive())) return [3 /*break*/, 5];
+                                        if (!(e && e.is_live && !ch.isLive())) return [3 /*break*/, 5];
                                         return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/streams?user_login=" + ch.name, token)];
                                     case 4:
                                         r = _a.sent();
@@ -94,8 +94,12 @@ var TwitchRequest = /** @class */ (function (_super) {
                                         }
                                         else {
                                             ee = r.data.find(function (d) { return d.user_name.toLowerCase() === ch.name; });
-                                            this.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 99999), ee.viewer_count));
-                                            ch.setLive();
+                                            if (r.data.length !== 0) {
+                                                if (ee) {
+                                                    this.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 99999), ee.viewer_count));
+                                                    ch.setLive();
+                                                }
+                                            }
                                         }
                                         return [3 /*break*/, 6];
                                     case 5:
@@ -311,29 +315,36 @@ var TwitchRequest = /** @class */ (function (_super) {
                                 token = _a.sent();
                                 _a.label = 2;
                             case 2:
-                                _a.trys.push([2, 7, , 8]);
+                                _a.trys.push([2, 9, , 10]);
                                 return [4 /*yield*/, this.getData(("https://api.twitch.tv/helix/streams?user_login=" + username.toLowerCase()), token)];
                             case 3:
                                 response = _a.sent();
                                 if (!(response.data === undefined)) return [3 /*break*/, 4];
                                 console.log("[TwitchRequest] Error while fetching stream data! (Channel=" + username.toLowerCase() + ")");
                                 resolve(undefined);
-                                return [3 /*break*/, 6];
+                                return [3 /*break*/, 8];
                             case 4:
-                                e = response.data.find(function (d) { return d.user_name.toLowerCase() === username.toLowerCase(); });
-                                return [4 /*yield*/, this.getData(("https://api.twitch.tv/helix/search/channels?query=" + username.toLowerCase()), token)];
+                                if (!(response.data.length === 0)) return [3 /*break*/, 5];
+                                resolve(undefined);
+                                return [3 /*break*/, 8];
                             case 5:
+                                e = response.data.find(function (d) { return d.user_name.toLowerCase() === username.toLowerCase(); });
+                                if (!!e) return [3 /*break*/, 6];
+                                resolve(undefined);
+                                return [3 /*break*/, 8];
+                            case 6: return [4 /*yield*/, this.getData(("https://api.twitch.tv/helix/search/channels?query=" + username.toLowerCase()), token)];
+                            case 7:
                                 res = _a.sent();
                                 ee = res.data.find(function (d) { return d.display_name.toLowerCase() === username.toLowerCase(); });
                                 user = new StreamData(e, e.user_name.toLowerCase(), e.title, e.game_name, ee.thumbnail_url, e.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 99999), e.viewer_count);
                                 resolve(user);
-                                _a.label = 6;
-                            case 6: return [3 /*break*/, 8];
-                            case 7:
+                                _a.label = 8;
+                            case 8: return [3 /*break*/, 10];
+                            case 9:
                                 err_4 = _a.sent();
                                 console.log(err_4);
-                                return [3 /*break*/, 8];
-                            case 8: return [2 /*return*/];
+                                return [3 /*break*/, 10];
+                            case 10: return [2 /*return*/];
                         }
                     });
                 }); });
