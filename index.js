@@ -96,7 +96,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                                             ee = r.data.find(function (d) { return d.user_name.toLowerCase() === ch.name; });
                                             if (r.data.length !== 0) {
                                                 if (ee) {
-                                                    this.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 99999), ee.viewer_count));
+                                                    this.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 999999), ee.viewer_count));
                                                     ch.setLive();
                                                 }
                                             }
@@ -336,7 +336,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                             case 7:
                                 res = _a.sent();
                                 ee = res.data.find(function (d) { return d.display_name.toLowerCase() === username.toLowerCase(); });
-                                user = new StreamData(e, e.user_name.toLowerCase(), e.title, e.game_name, ee.thumbnail_url, e.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 99999), e.viewer_count);
+                                user = new StreamData(e, e.user_name.toLowerCase(), e.title, e.game_name, ee.thumbnail_url, e.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 9999999), e.viewer_count);
                                 resolve(user);
                                 _a.label = 8;
                             case 8: return [3 /*break*/, 10];
@@ -411,7 +411,12 @@ var TwitchRequest = /** @class */ (function (_super) {
                                 resolve(undefined);
                             }
                             else {
-                                resolve(JSON.parse(body));
+                                if (body.startsWith('<')) {
+                                    resolve(undefined);
+                                }
+                                else {
+                                    resolve(JSON.parse(body));
+                                }
                             }
                         });
                         return [2 /*return*/];
