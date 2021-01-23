@@ -49,6 +49,7 @@ declare module 'twitchrequest' {
     }
 
     export interface TwitchRequestEvents {
+        ready: [void];
         live: [StreamData];
         unlive: [StreamData];
         debug: [StreamData];

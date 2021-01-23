@@ -151,6 +151,8 @@ var TwitchRequest = /** @class */ (function (_super) {
                                         return [3 /*break*/, 7];
                                     case 3:
                                         if (!(response.total > ch.follows && ch.latest !== followedName)) return [3 /*break*/, 6];
+                                        ch.latest = followedName;
+                                        ch.follows = response.total;
                                         return [4 /*yield*/, this.getUser(followedName.toLowerCase())];
                                     case 4:
                                         followedUserData = _a.sent();
@@ -159,13 +161,12 @@ var TwitchRequest = /** @class */ (function (_super) {
                                         streamData = _a.sent();
                                         if (followedUserData && streamData) {
                                             this.emit(constants_1.TwitchRequestEvents.FOLLOW, followedUserData, streamData);
-                                            ch.latest = followedName;
                                         }
-                                        ch.follows = response.total;
                                         return [3 /*break*/, 7];
                                     case 6:
                                         if (response.total < ch.follows) {
                                             ch.follows = response.total;
+                                            ch.latest = followedName;
                                         }
                                         _a.label = 7;
                                     case 7: return [3 /*break*/, 9];
@@ -434,15 +435,19 @@ var TwitchRequest = /** @class */ (function (_super) {
         _this.clientid = options.client_id || null;
         _this.clientsecret = options.client_secret || null;
         _this.liveListener();
-        _this.followListener();
         setInterval(_this.liveListener, _this.interval);
+        _this.followListener();
         setInterval(_this.followListener, _this.interval);
+        _this.emit(constants_1.TwitchRequestEvents.READY);
         return _this;
     }
     return TwitchRequest;
 }(events_1.EventEmitter));
 var StreamData = /** @class */ (function () {
     function StreamData(r, n, t, g, pfp, tb, v) {
+        /**
+         * @constant
+         */
         this.raw = r;
         this.name = n;
         this.title = t;
@@ -503,9 +508,9 @@ var TwitchChannel = /** @class */ (function () {
     };
     return TwitchChannel;
 }());
-function isEmpty(str) {
+var isEmpty = function (str) {
     return (str == "" || str == null || str == undefined || str.length == 0 || str.trim().length == 0 || str.trim() == "");
-}
+};
 module.exports = {
     TwitchRequest: TwitchRequest,
     StreamData: StreamData,
