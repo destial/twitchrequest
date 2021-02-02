@@ -412,11 +412,11 @@ var TwitchRequest = /** @class */ (function (_super) {
                                 resolve(undefined);
                             }
                             else {
-                                if (body.startsWith('<')) {
-                                    resolve(undefined);
+                                if (body.startsWith('{') && body.endsWith('}')) {
+                                    resolve(JSON.parse(body));
                                 }
                                 else {
-                                    resolve(JSON.parse(body));
+                                    resolve(undefined);
                                 }
                             }
                         });
@@ -434,11 +434,11 @@ var TwitchRequest = /** @class */ (function (_super) {
         });
         _this.clientid = options.client_id || null;
         _this.clientsecret = options.client_secret || null;
-        _this.liveListener();
-        setInterval(_this.liveListener, _this.interval);
-        _this.followListener();
-        setInterval(_this.followListener, _this.interval);
         _this.emit(constants_1.TwitchRequestEvents.READY);
+        _this.liveListener();
+        _this.followListener();
+        setInterval(_this.liveListener, _this.interval);
+        setInterval(_this.followListener, _this.interval);
         return _this;
     }
     return TwitchRequest;
