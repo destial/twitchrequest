@@ -76,7 +76,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                                         return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/search/channels?query=" + ch.name, token)];
                                     case 1:
                                         response = _a.sent();
-                                        if (!response) return [3 /*break*/, 5];
+                                        if (!(response && response.data && response.data.length)) return [3 /*break*/, 5];
                                         e = response.data.find(function (d) { return d.display_name === ch.name; });
                                         return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/games?id=" + e.game_id, token)];
                                     case 2:
@@ -229,7 +229,7 @@ var TwitchRequest = /** @class */ (function (_super) {
                                 return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/users?login=" + username.toLowerCase(), token)];
                             case 3:
                                 response = _a.sent();
-                                if (response.data === undefined) {
+                                if (!response || !response.data) {
                                     console.log("[TwitchRequest] Error while fetching user data! (User=" + username.toLowerCase() + ")");
                                     resolve(undefined);
                                 }

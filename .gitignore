@@ -102,9 +102,6 @@ dist
 # TernJS port file
 .tern-port
 
-# TypeScript files
-index.ts
-
 # My test files
 test/
 test.js
