@@ -72,48 +72,43 @@ var TwitchRequest = /** @class */ (function (_super) {
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
-                                        _a.trys.push([0, 7, , 8]);
+                                        _a.trys.push([0, 6, , 7]);
                                         return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/search/channels?query=" + ch.name, token)];
                                     case 1:
                                         response = _a.sent();
-                                        if (!(response.data === undefined)) return [3 /*break*/, 2];
-                                        console.log("[TwitchRequest] Error while listening to live channels! (Channel=" + ch.name + ")");
-                                        return [3 /*break*/, 6];
-                                    case 2:
+                                        if (!response) return [3 /*break*/, 5];
                                         e = response.data.find(function (d) { return d.display_name === ch.name; });
                                         return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/games?id=" + e.game_id, token)];
-                                    case 3:
+                                    case 2:
                                         res = _a.sent();
+                                        if (!(res && res.data && res.data.length)) return [3 /*break*/, 5];
                                         this.emit(constants_1.TwitchRequestEvents.DEBUG, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, null, 0));
-                                        if (!(e && e.is_live && !ch.isLive())) return [3 /*break*/, 5];
+                                        if (!(e && e.is_live && !ch.isLive())) return [3 /*break*/, 4];
                                         return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/streams?user_login=" + ch.name, token)];
-                                    case 4:
+                                    case 3:
                                         r = _a.sent();
-                                        if (r.data === undefined) {
-                                            console.log("[TwitchRequest] Error while listening to live channels! (Channel=" + ch.name + ")");
-                                        }
-                                        else {
+                                        if (r && r.data) {
                                             ee = r.data.find(function (d) { return d.user_name.toLowerCase() === ch.name; });
-                                            if (r.data.length !== 0) {
+                                            if (r.data.length) {
                                                 if (ee) {
                                                     this.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 999999), ee.viewer_count));
                                                     ch.setLive();
                                                 }
                                             }
                                         }
-                                        return [3 /*break*/, 6];
-                                    case 5:
+                                        return [3 /*break*/, 5];
+                                    case 4:
                                         if (!e.is_live && ch.isLive()) {
                                             this.emit(constants_1.TwitchRequestEvents.UNLIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, null, 0));
                                             ch.notLive();
                                         }
-                                        _a.label = 6;
-                                    case 6: return [3 /*break*/, 8];
-                                    case 7:
+                                        _a.label = 5;
+                                    case 5: return [3 /*break*/, 7];
+                                    case 6:
                                         err_1 = _a.sent();
                                         console.log(err_1);
-                                        return [3 /*break*/, 8];
-                                    case 8: return [2 /*return*/];
+                                        return [3 /*break*/, 7];
+                                    case 7: return [2 /*return*/];
                                 }
                             });
                         }); });
@@ -134,15 +129,15 @@ var TwitchRequest = /** @class */ (function (_super) {
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
-                                        _a.trys.push([0, 12, , 13]);
+                                        _a.trys.push([0, 8, , 9]);
                                         return [4 /*yield*/, this.getUser(ch.name)];
                                     case 1:
                                         userData = _a.sent();
-                                        if (!userData) return [3 /*break*/, 10];
+                                        if (!userData) return [3 /*break*/, 7];
                                         return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/users/follows?to_id=" + userData.id, token)];
                                     case 2:
                                         response = _a.sent();
-                                        if (!response.data) return [3 /*break*/, 8];
+                                        if (!(response && response.data && response.data.length)) return [3 /*break*/, 7];
                                         followedName = response.data[0].from_name;
                                         if (!!ch.isLoaded) return [3 /*break*/, 3];
                                         ch.follows = response.total;
@@ -171,18 +166,10 @@ var TwitchRequest = /** @class */ (function (_super) {
                                         _a.label = 7;
                                     case 7: return [3 /*break*/, 9];
                                     case 8:
-                                        console.log("[TwitchRequest] Error while listening to follows! (Channel=" + ch.name + ")");
-                                        _a.label = 9;
-                                    case 9: return [3 /*break*/, 11];
-                                    case 10:
-                                        console.log("[TwitchRequest] Error while listening to follows! (Channel=" + ch.name + ")");
-                                        _a.label = 11;
-                                    case 11: return [3 /*break*/, 13];
-                                    case 12:
                                         err_2 = _a.sent();
                                         console.log(err_2);
-                                        return [3 /*break*/, 13];
-                                    case 13: return [2 /*return*/];
+                                        return [3 /*break*/, 9];
+                                    case 9: return [2 /*return*/];
                                 }
                             });
                         }); });
