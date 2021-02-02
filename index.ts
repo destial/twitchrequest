@@ -51,7 +51,7 @@ class TwitchRequest extends EventEmitter {
                                                 e.thumbnail_url, 
                                                 `${ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 999999)}`, 
                                                 ee.viewer_count));
-                                        ch.setLive();
+                                        ch._setLive();
                                     }
                                 }
                             }
@@ -64,7 +64,7 @@ class TwitchRequest extends EventEmitter {
                                     e.thumbnail_url, 
                                     null, 
                                     0));
-                            ch.notLive();
+                            ch._notLive();
                         }
                     }
                 }
@@ -348,14 +348,14 @@ class TwitchChannel {
     /**
      * **DO NOT USE THIS METHOD OR IT WILL MESS UP THE CLIENT**
      */
-    setLive() {
+    _setLive() {
         this.live = true;
     }
 
     /**
      * **DO NOT USE THIS METHOD OR IT WILL MESS UP THE CLIENT**
      */
-    notLive() {
+    _notLive() {
         this.live = false;
     }
 
