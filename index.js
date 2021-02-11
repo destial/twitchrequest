@@ -93,14 +93,16 @@ var TwitchRequest = /** @class */ (function (_super) {
                                                 if (ee) {
                                                     this.emit(constants_1.TwitchRequestEvents.LIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 999999), ee.viewer_count));
                                                     ch._setLive();
+                                                    ch.liveSince = new Date();
                                                 }
                                             }
                                         }
                                         return [3 /*break*/, 5];
                                     case 4:
-                                        if (!e.is_live && ch.isLive()) {
+                                        if (!e.is_live && ch.isLive() && ((new Date()).getTime() - 60000) > ch.liveSince.getTime()) {
                                             this.emit(constants_1.TwitchRequestEvents.UNLIVE, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, null, 0));
                                             ch._notLive();
+                                            ch.liveSince = undefined;
                                         }
                                         _a.label = 5;
                                     case 5: return [3 /*break*/, 7];
@@ -474,6 +476,7 @@ var TwitchChannel = /** @class */ (function () {
         this.follows = 0;
         this.isLoaded = false;
         this.latest = undefined;
+        this.liveSince = undefined;
     }
     /**
      * **DO NOT USE THIS METHOD OR IT WILL MESS UP THE CLIENT**

@@ -52,10 +52,11 @@ class TwitchRequest extends EventEmitter {
                                                 `${ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 999999)}`, 
                                                 ee.viewer_count));
                                         ch._setLive();
+                                        ch.liveSince = new Date();
                                     }
                                 }
                             }
-                        } else if (!e.is_live && ch.isLive()) {
+                        } else if (!e.is_live && ch.isLive() && ((new Date()).getTime()-60000) > ch.liveSince.getTime()) {
                             this.emit(TwitchRequestEvents.UNLIVE, 
                                 new StreamData(e, 
                                     e.display_name, 
@@ -65,6 +66,7 @@ class TwitchRequest extends EventEmitter {
                                     null, 
                                     0));
                             ch._notLive();
+                            ch.liveSince = undefined;
                         }
                     }
                 }
@@ -337,12 +339,14 @@ class TwitchChannel {
     follows: number;
     isLoaded: boolean;
     latest: string;
+    liveSince: Date;
     constructor(n: string) {
         this.name = n;
         this.live = false;
         this.follows = 0;
         this.isLoaded = false;
         this.latest = undefined;
+        this.liveSince = undefined;
     }
 
     /**
