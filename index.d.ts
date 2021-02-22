@@ -8,7 +8,7 @@ declare module 'twitchrequest' {
         client_secret: string,
     }
 
-    export class TwitchRequest extends EventEmitter {
+    export class Client extends EventEmitter {
         private channel: TwitchChannel[];
         private clientid: string;
         private clientsecret: string;

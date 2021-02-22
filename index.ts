@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import * as Request from 'request';
 import { TwitchRequestEvents } from './util/constants';
 
-class TwitchRequest extends EventEmitter {
+class Client extends EventEmitter {
     private channel: TwitchChannel[];
     private clientid: string;
     private clientsecret: string;
@@ -386,7 +386,7 @@ interface TwitchRequestOptions {
 type URL = string;
 
 module.exports = {
-    TwitchRequest,
+    Client,
     StreamData,
     UserData,
     TwitchChannel

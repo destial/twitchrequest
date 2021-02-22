@@ -52,9 +52,9 @@ exports.__esModule = true;
 var events_1 = require("events");
 var Request = require("request");
 var constants_1 = require("./util/constants");
-var TwitchRequest = /** @class */ (function (_super) {
-    __extends(TwitchRequest, _super);
-    function TwitchRequest(options) {
+var Client = /** @class */ (function (_super) {
+    __extends(Client, _super);
+    function Client(options) {
         var _this = _super.call(this) || this;
         /**
          * @private
@@ -430,7 +430,7 @@ var TwitchRequest = /** @class */ (function (_super) {
         setInterval(_this.followListener, _this.interval);
         return _this;
     }
-    return TwitchRequest;
+    return Client;
 }(events_1.EventEmitter));
 var StreamData = /** @class */ (function () {
     function StreamData(r, n, t, g, pfp, tb, v) {
@@ -502,7 +502,7 @@ var isEmpty = function (str) {
     return (str == "" || str == null || str == undefined || str.length == 0 || str.trim().length == 0 || str.trim() == "");
 };
 module.exports = {
-    TwitchRequest: TwitchRequest,
+    Client: Client,
     StreamData: StreamData,
     UserData: UserData,
     TwitchChannel: TwitchChannel
