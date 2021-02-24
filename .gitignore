@@ -106,5 +106,7 @@ dist
 test/
 test.js
 
+index.ts
+
 # JSHint
 .jshintrc

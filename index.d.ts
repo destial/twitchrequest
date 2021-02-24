@@ -25,6 +25,7 @@ declare module 'twitchrequest' {
         public addChannel(channel: string): void;
         public removeChannel(channel: string): void;
         public includesChannel(channel: string): boolean;
+        public allChannels(): TwitchChannel[];
     }    
 
     export class StreamData {

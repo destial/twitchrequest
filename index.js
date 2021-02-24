@@ -190,6 +190,13 @@ var Client = /** @class */ (function (_super) {
             _this.channel.push(twitchChannel);
         };
         /**
+         * Gets all the subscribed channels
+         * @returns {TwitchChannel[]}
+         */
+        _this.allChannels = function () {
+            return _this.channel;
+        };
+        /**
          * Removes a channel from the client to listen to
          * @param channel A Twitch channel name
          */

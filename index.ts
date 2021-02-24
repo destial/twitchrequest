@@ -122,6 +122,14 @@ class Client extends EventEmitter {
     }
 
     /**
+     * Gets all the subscribed channels
+     * @returns {TwitchChannel[]}
+     */
+    allChannels = () => {
+        return this.channel;
+    }
+
+    /**
      * Removes a channel from the client to listen to
      * @param channel A Twitch channel name
      */
