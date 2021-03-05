@@ -39,6 +39,7 @@ build/Release
 
 # Dependency directories
 jspm_packages/
+node_modules/
 
 # TypeScript v1 declaration files
 typings/
@@ -105,7 +106,6 @@ dist
 # My test files
 test/
 test.js
-
 index.ts
 
 # JSHint

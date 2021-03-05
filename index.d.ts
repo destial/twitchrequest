@@ -6,6 +6,9 @@ declare module 'twitchrequest' {
         channels: string[],
         client_id: string,
         client_secret: string,
+        timeout?: number,
+        cache?: boolean,
+        callback?: URL,
     }
 
     export class Client extends EventEmitter {
@@ -37,6 +40,7 @@ declare module 'twitchrequest' {
         public profile: URL;
         public thumbnail: URL;
         public viewers: number;
+        public toJSON(): Object;
     }
 
     export class UserData {
@@ -47,6 +51,8 @@ declare module 'twitchrequest' {
         public profile: URL;
         public created: Date;
         public views: number;
+        public type: string;
+        public toJSON(): Object;
     }
 
     export interface TwitchRequestEvents {
@@ -58,11 +64,27 @@ declare module 'twitchrequest' {
     }
 
     export class TwitchChannel {
-        name: string;
-        isLoaded: boolean;
+        public client: Client;
+        public name: string;
         private live: boolean;
+        public follows: number;
+        public isLoaded: boolean;
+        public latest: string;
+        public liveSince: Date;
+        public user: UserData;
+        public followers: FollowManager;
+        public toJSON(): Object;
+    }
+
+    export class TwitchChannelManager {
+        public cache: Map<string, TwitchChannel>;
+        public client: Client;
+    }
+    
+    export class FollowManager {
+        public cache: Map<string, UserData>;
+        public channel: TwitchChannel;
     }
     
     export type URL = string;
-    
 }
