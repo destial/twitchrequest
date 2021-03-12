@@ -62,50 +62,25 @@ class Client extends EventEmitter {
         const token = await this.getToken();
         this.channels.forEach(async (ch) => {
             try {
-                const response = await this.getData(`https://api.twitch.tv/helix/search/channels?query=${ch.name}`, token);
-                if (response && response.data && response.data.length) {
-                    const e = response.data.find((d) => d.display_name.toLowerCase() === ch.name.toLowerCase());
+                const response = await this.getData(`https://api.twitch.tv/helix/streams?user_id=${ch.user.id}`, token);
+                if (response && response.data) {
+                    const e = response.data[0];
                     if (e) {
-                        const res = await this.getData(`https://api.twitch.tv/helix/games?id=${e.game_id}`, token);
-                        if (res && res.data && res.data.length) {
-                            const userData = await this.getUser(ch.name.toLowerCase());
-                            this.emit(TwitchRequestEvents.DEBUG, new StreamData(e, e.display_name, e.title, res.data[0].name, e.thumbnail_url, null, 0, userData));
-                            if (e && e.is_live && !ch.isLive()) {
-                                const r = await this.getData(`https://api.twitch.tv/helix/streams?user_login=${ch.name}`, token);
-                                if (r && r.data) {
-                                    const ee = r.data.find((d) => d.user_name.toLowerCase() === ch.name.toLowerCase());
-                                    if (r.data.length) {
-                                        if (ee) {
-                                            const userData = await this.getUser(ch.name.toLowerCase());
-                                            if (new Date(e.started_at).getTime() > Date.now()-1000*60*15) {
-                                                this.emit(TwitchRequestEvents.LIVE, 
-                                                    new StreamData(e, 
-                                                        e.display_name, 
-                                                        e.title, res.data[0].name, 
-                                                        e.thumbnail_url, 
-                                                        `${ee.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 999999)}`, 
-                                                        ee.viewer_count,
-                                                        userData));
-                                            }
-                                            ch._setLive();
-                                            ch.liveSince = new Date();
-                                        }
-                                    }
-                                }
-                            } else if (!e.is_live && ch.isLive() && ((new Date()).getTime()-60000) > ch.liveSince.getTime()) {
-                                const userData = await this.getUser(ch.name.toLowerCase());
-                                this.emit(TwitchRequestEvents.UNLIVE, 
-                                    new StreamData(e, 
-                                        e.display_name, 
-                                        e.title, 
-                                        res.data[0].name, 
-                                        e.thumbnail_url, 
-                                        null, 
-                                        0,
-                                        userData));
-                                ch._notLive();
-                                ch.liveSince = undefined;
+                        if (!ch.isLive()) {
+                            const userData = await this.resolveID(ch.user.id);
+                            const streamData = new StreamData(e, 
+                                e.user_name, 
+                                e.title, 
+                                e.game_name, 
+                                userData.profile, 
+                                `${e.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 999999)}`, 
+                                e.viewer_count,
+                                userData);
+                            if (new Date(e.started_at).getTime() > Date.now() - 1000*60*15) {
+                                this.emit(TwitchRequestEvents.LIVE, streamData);
                             }
+                            ch._setLive();
+                            ch.liveSince = new Date();
                         }
                     }
                 }
@@ -207,7 +182,7 @@ class Client extends EventEmitter {
                 } else {
                     const e = response.data.find((d) => d.display_name.toLowerCase() === username.toLowerCase());
                     if (e) {
-                        const user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
+                        const user = new UserData(e, e.display_name, e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
                         resolve(user);
                     } else {
                         resolve(undefined);
@@ -227,14 +202,16 @@ class Client extends EventEmitter {
         return new Promise<UserData>(async (resolve, reject) => {
             const token = await this.getToken();
             try {
-                const response = await this.getData(`https://api.twitch.th/helix/users?id=${id}`, token);
+                const response = await this.getData(`https://api.twitch.tv/helix/users?id=${id}`, token);
                 if (!response || !response.data) {
                     resolve(undefined);
                 } else {
                     const e = response.data[0];
                     if (e) {
-                        const user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
+                        const user = new UserData(e, e.display_name, e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
                         resolve(user);
+                    } else {
+                        resolve(undefined);
                     }
                 }
             } catch(err) {
@@ -278,7 +255,7 @@ class Client extends EventEmitter {
                         if (res) {
                             const raw = res.data.find((d) => d.display_name.toLowerCase() === username.toLowerCase());
                             if (raw) {
-                                const followerUserData = new UserData(raw, raw.display_name.toLowerCase(), raw.description, raw.id, raw.profile_image_url, raw.view_count, raw.broadcaster_type);
+                                const followerUserData = new UserData(raw, raw.display_name, raw.description, raw.id, raw.profile_image_url, raw.view_count, raw.broadcaster_type);
                                 followerData.push(followerUserData);
                             }
                         }
@@ -291,6 +268,42 @@ class Client extends EventEmitter {
     }
 
     /**
+     * Resolves a user ID to an active stream
+     * @param {string} id 
+     * @returns {Promise<StreamData>}
+     */
+    resolveStream = async (id: string) => {
+        return new Promise<StreamData>(async (resolve, reject) => {
+            try {
+                const token = await this.getToken();
+                const response = await this.getData(`https://api.twitch.tv/helix/streams?user_id=${id}`, token);
+                if (response && response.data) {
+                    const e = response.data[0];
+                    if (e) {
+                        const userData = await this.resolveID(id);
+                        const stream = new StreamData(e, 
+                            e.user_name, 
+                            e.title, 
+                            e.game_name, 
+                            userData.profile, 
+                            `${e.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 999999)}`, 
+                            e.viewer_count,
+                            userData);
+                        resolve(stream);
+                    } else {
+                        resolve(undefined);
+                    }
+                } else {
+                    resolve(undefined);
+                }
+            } catch(err) {
+                console.log(err);
+                reject(err);
+            }
+        });
+    }
+
+    /**
      * 
      * @param {string} username The username of the channel
      * @returns {Promise<StreamData>} 
@@ -299,7 +312,7 @@ class Client extends EventEmitter {
         return new Promise<StreamData>(async (resolve, reject) => {
             const token = await this.getToken();
             try {
-                const response = await this.getData(("https://api.twitch.tv/helix/streams?user_login=" + username.toLowerCase()), token);
+                const response = await this.getData(`https://api.twitch.tv/helix/streams?user_login=${username.toLowerCase()}`, token);
                 if (response.data === undefined) {
                     resolve(undefined);
                 } else {
@@ -310,10 +323,10 @@ class Client extends EventEmitter {
                         if (!e) {
                             resolve(undefined);
                         } else {
-                            const res = await this.getData(("https://api.twitch.tv/helix/search/channels?query=" + username.toLowerCase()), token);
+                            const res = await this.getData(`https://api.twitch.tv/helix/search/channels?query=${username.toLowerCase()}`, token);
                             const ee = res.data.find((d: any) => d.display_name.toLowerCase() === username.toLowerCase());
                             const userData = await this.getUser(username.toLowerCase());
-                            const stream = new StreamData(e, e.user_name.toLowerCase(), e.title, e.game_name, ee.thumbnail_url, `${e.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 9999999)}`, e.viewer_count, userData);
+                            const stream = new StreamData(e, e.user_name, e.title, e.game_name, ee.thumbnail_url, `${e.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 9999999)}`, e.viewer_count, userData);
                             resolve(stream);
                         }
                     }
