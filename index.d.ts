@@ -23,6 +23,7 @@ declare module 'twitchrequest' {
         public on<K extends keyof TwitchRequestEvents>(event: K, listener: (...args: TwitchRequestEvents[K]) => void): this;
 
         public getUser(username: string): Promise<UserData>;
+        public resolveID(id: string): Promise<UserData>;
         public getStream(username: string): Promise<StreamData>;
         public getFollows(username: string): Promise<number>;
         public addChannel(channel: string): void;

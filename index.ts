@@ -206,10 +206,38 @@ class Client extends EventEmitter {
                     resolve(undefined);
                 } else {
                     const e = response.data.find((d) => d.display_name.toLowerCase() === username.toLowerCase());
-                    const user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
-                    resolve(user);
+                    if (e) {
+                        const user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
+                        resolve(user);
+                    } else {
+                        resolve(undefined);
+                    }
                 }
             } catch (err) {
+                console.log(err);
+            }
+        });
+    }
+
+    /**
+     * Resolves a user ID to a user channel
+     * @param {string} id The ID of the user 
+     */
+    resolveID = async (id: string) => {
+        return new Promise<UserData>(async (resolve, reject) => {
+            const token = await this.getToken();
+            try {
+                const response = await this.getData(`https://api.twitch.th/helix/users?id=${id}`, token);
+                if (!response || !response.data) {
+                    resolve(undefined);
+                } else {
+                    const e = response.data[0];
+                    if (e) {
+                        const user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
+                        resolve(user);
+                    }
+                }
+            } catch(err) {
                 console.log(err);
             }
         });
@@ -396,6 +424,7 @@ class StreamData {
             title: this.title,
             game: this.game,
             profile: this.profile,
+            viewers: this.viewers,
             thumbnail: this.thumbnail,
             startedAt: this.date,
             user: this.user.toJSON()

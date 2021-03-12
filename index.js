@@ -263,13 +263,59 @@ var Client = /** @class */ (function (_super) {
                                     }
                                     else {
                                         e = response.data.find(function (d) { return d.display_name.toLowerCase() === username.toLowerCase(); });
-                                        user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
-                                        resolve(user);
+                                        if (e) {
+                                            user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
+                                            resolve(user);
+                                        }
+                                        else {
+                                            resolve(undefined);
+                                        }
                                     }
                                     return [3 /*break*/, 5];
                                 case 4:
                                     err_3 = _a.sent();
                                     console.log(err_3);
+                                    return [3 /*break*/, 5];
+                                case 5: return [2 /*return*/];
+                            }
+                        });
+                    }); })];
+            });
+        }); };
+        /**
+         * Resolves a user ID to a user channel
+         * @param {string} id The ID of the user
+         */
+        _this.resolveID = function (id) { return __awaiter(_this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                        var token, response, e, user, err_4;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, this.getToken()];
+                                case 1:
+                                    token = _a.sent();
+                                    _a.label = 2;
+                                case 2:
+                                    _a.trys.push([2, 4, , 5]);
+                                    return [4 /*yield*/, this.getData("https://api.twitch.th/helix/users?id=" + id, token)];
+                                case 3:
+                                    response = _a.sent();
+                                    if (!response || !response.data) {
+                                        resolve(undefined);
+                                    }
+                                    else {
+                                        e = response.data[0];
+                                        if (e) {
+                                            user = new UserData(e, e.display_name.toLowerCase(), e.description, e.id, e.profile_image_url, e.view_count, e.broadcaster_type);
+                                            resolve(user);
+                                        }
+                                    }
+                                    return [3 /*break*/, 5];
+                                case 4:
+                                    err_4 = _a.sent();
+                                    console.log(err_4);
                                     return [3 /*break*/, 5];
                                 case 5: return [2 /*return*/];
                             }
@@ -374,7 +420,7 @@ var Client = /** @class */ (function (_super) {
             var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                        var token, response, e, res, ee, userData, stream, err_4;
+                        var token, response, e, res, ee, userData, stream, err_5;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, this.getToken()];
@@ -410,8 +456,8 @@ var Client = /** @class */ (function (_super) {
                                     _a.label = 9;
                                 case 9: return [3 /*break*/, 11];
                                 case 10:
-                                    err_4 = _a.sent();
-                                    console.log(err_4);
+                                    err_5 = _a.sent();
+                                    console.log(err_5);
                                     return [3 /*break*/, 11];
                                 case 11: return [2 /*return*/];
                             }
@@ -576,6 +622,7 @@ var StreamData = /** @class */ (function () {
             title: this.title,
             game: this.game,
             profile: this.profile,
+            viewers: this.viewers,
             thumbnail: this.thumbnail,
             startedAt: this.date,
             user: this.user.toJSON()
