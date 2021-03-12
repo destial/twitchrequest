@@ -7,6 +7,7 @@ class Client extends EventEmitter {
     private clientid: string;
     private clientsecret: string;
     private interval: number;
+    private repeat: boolean;
     public manager: TwitchChannelManager;
     private cache_follow: boolean;
     constructor(options: TwitchRequestOptions) {
@@ -16,6 +17,7 @@ class Client extends EventEmitter {
             this.channels = [];
             this.clientid = options.client_id || null;
             this.clientsecret = options.client_secret || null;
+            this.repeat = options.repeat ? options.repeat : false;
             this.cache_follow = options.cache ? options.cache : false;
             this.manager = new TwitchChannelManager(this);
 
@@ -59,42 +61,34 @@ class Client extends EventEmitter {
      * @private
      */
     liveListener = async () => {
-        const token = await this.getToken();
         this.channels.forEach(async (ch) => {
             try {
-                const response = await this.getData(`https://api.twitch.tv/helix/streams?user_id=${ch.user.id}`, token);
-                if (response && response.data) {
-                    const e = response.data[0];
-                    if (e) {
-                        if (!ch.isLive()) {
-                            const userData = await this.resolveID(ch.user.id);
-                            const streamData = new StreamData(e, 
-                                e.user_name, 
-                                e.title, 
-                                e.game_name, 
-                                userData.profile, 
-                                `${e.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 999999)}`, 
-                                e.viewer_count,
-                                userData);
-                            if (new Date(e.started_at).getTime() > Date.now() - 1000*60*15) {
-                                this.emit(TwitchRequestEvents.LIVE, streamData);
-                            }
-                            ch._setLive();
-                            ch.liveSince = new Date();
+                if (!ch.isLive()) {
+                    const streamData = await this.resolveStream(ch.user.id);
+                    if (!this.repeat) {
+                        if (streamData.date.getTime() > Date.now() - 1000*60*15) {
+                            this.emit(TwitchRequestEvents.LIVE, streamData);
                         }
+                    } else {
+                        this.emit(TwitchRequestEvents.LIVE, streamData);
                     }
+                    ch._setLive();
+                    ch.liveSince = new Date();
                 }
             } catch (err) {
                 console.log(err);
             }
         });
     }
-
+    
+    /**
+     * @private
+     */
     followListener = async () => {
         const token = await this.getToken();
         this.channels.forEach(async (ch) => {
             try {
-                const userData = await this.getUser(ch.name);
+                const userData = await this.resolveID(ch.user.id);
                 if (userData) {
                     const response = await this.getData(`https://api.twitch.tv/helix/users/follows?to_id=${userData.id}`, token);
                     if (response && response.data && response.data.length) {
@@ -108,7 +102,7 @@ class Client extends EventEmitter {
                                 ch.latest = followedName;
                                 ch.follows = response.total;
                                 const followedUserData = await this.getUser(followedName.toLowerCase());
-                                const streamData = await this.getStream(ch.name);
+                                const streamData = await this.resolveStream(ch.user.id);
                                 if (followedUserData && streamData) {
                                     this.emit(TwitchRequestEvents.FOLLOW, followedUserData, streamData);
                                 }
@@ -578,6 +572,7 @@ interface TwitchRequestOptions {
     client_secret: string,
     timeout?: number,
     cache?: boolean,
+    repeat?: boolean,
     callback?: URL,
 }
 

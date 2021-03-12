@@ -60,47 +60,39 @@ var Client = /** @class */ (function (_super) {
          * @private
          */
         _this.liveListener = function () { return __awaiter(_this, void 0, void 0, function () {
-            var token;
             var _this = this;
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getToken()];
-                    case 1:
-                        token = _a.sent();
-                        this.channels.forEach(function (ch) { return __awaiter(_this, void 0, void 0, function () {
-                            var response, e, userData, streamData, err_1;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        _a.trys.push([0, 4, , 5]);
-                                        return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/streams?user_id=" + ch.user.id, token)];
-                                    case 1:
-                                        response = _a.sent();
-                                        if (!(response && response.data)) return [3 /*break*/, 3];
-                                        e = response.data[0];
-                                        if (!e) return [3 /*break*/, 3];
-                                        if (!!ch.isLive()) return [3 /*break*/, 3];
-                                        return [4 /*yield*/, this.resolveID(ch.user.id)];
-                                    case 2:
-                                        userData = _a.sent();
-                                        streamData = new StreamData(e, e.user_name, e.title, e.game_name, userData.profile, e.thumbnail_url.replace('{width}', '440').replace('{height}', '248') + "?r=" + Math.floor(Math.random() * 999999), e.viewer_count, userData);
-                                        if (new Date(e.started_at).getTime() > Date.now() - 1000 * 60 * 15) {
-                                            this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
-                                        }
-                                        ch._setLive();
-                                        ch.liveSince = new Date();
-                                        _a.label = 3;
-                                    case 3: return [3 /*break*/, 5];
-                                    case 4:
-                                        err_1 = _a.sent();
-                                        console.log(err_1);
-                                        return [3 /*break*/, 5];
-                                    case 5: return [2 /*return*/];
+                this.channels.forEach(function (ch) { return __awaiter(_this, void 0, void 0, function () {
+                    var streamData, err_1;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                _a.trys.push([0, 3, , 4]);
+                                if (!!ch.isLive()) return [3 /*break*/, 2];
+                                return [4 /*yield*/, this.resolveStream(ch.user.id)];
+                            case 1:
+                                streamData = _a.sent();
+                                if (!this.repeat) {
+                                    if (streamData.date.getTime() > Date.now() - 1000 * 60 * 15) {
+                                        this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
+                                    }
                                 }
-                            });
-                        }); });
-                        return [2 /*return*/];
-                }
+                                else {
+                                    this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
+                                }
+                                ch._setLive();
+                                ch.liveSince = new Date();
+                                _a.label = 2;
+                            case 2: return [3 /*break*/, 4];
+                            case 3:
+                                err_1 = _a.sent();
+                                console.log(err_1);
+                                return [3 /*break*/, 4];
+                            case 4: return [2 /*return*/];
+                        }
+                    });
+                }); });
+                return [2 /*return*/];
             });
         }); };
         _this.followListener = function () { return __awaiter(_this, void 0, void 0, function () {
@@ -117,7 +109,7 @@ var Client = /** @class */ (function (_super) {
                                 switch (_a.label) {
                                     case 0:
                                         _a.trys.push([0, 8, , 9]);
-                                        return [4 /*yield*/, this.getUser(ch.name)];
+                                        return [4 /*yield*/, this.resolveID(ch.user.id)];
                                     case 1:
                                         userData = _a.sent();
                                         if (!userData) return [3 /*break*/, 7];
@@ -138,7 +130,7 @@ var Client = /** @class */ (function (_super) {
                                         return [4 /*yield*/, this.getUser(followedName.toLowerCase())];
                                     case 4:
                                         followedUserData = _a.sent();
-                                        return [4 /*yield*/, this.getStream(ch.name)];
+                                        return [4 /*yield*/, this.resolveStream(ch.user.id)];
                                     case 5:
                                         streamData = _a.sent();
                                         if (followedUserData && streamData) {
@@ -576,6 +568,7 @@ var Client = /** @class */ (function (_super) {
             _this.channels = [];
             _this.clientid = options.client_id || null;
             _this.clientsecret = options.client_secret || null;
+            _this.repeat = options.repeat ? options.repeat : false;
             _this.cache_follow = options.cache ? options.cache : false;
             _this.manager = new TwitchChannelManager(_this);
             var loadChannels = new Promise(function (res, rej) {
