@@ -67,34 +67,45 @@ var Client = /** @class */ (function (_super) {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                _a.trys.push([0, 3, , 4]);
-                                if (!!ch.isLive()) return [3 /*break*/, 2];
+                                _a.trys.push([0, 2, , 3]);
                                 return [4 /*yield*/, this.resolveStream(ch.user.id)];
                             case 1:
                                 streamData = _a.sent();
-                                if (!this.repeat) {
-                                    if (streamData.date.getTime() > Date.now() - 1000 * 60 * 15) {
-                                        this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
+                                if (streamData) {
+                                    if (!ch.isLive()) {
+                                        if (!this.repeat) {
+                                            if (streamData.date.getTime() > Date.now() - 1000 * 60 * 15) {
+                                                this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
+                                            }
+                                        }
+                                        else {
+                                            this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
+                                        }
+                                        ch._setLive();
+                                        ch.liveSince = new Date();
                                     }
                                 }
                                 else {
-                                    this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
+                                    if (ch.isLive()) {
+                                        this.emit(constants_1.TwitchRequestEvents.UNLIVE);
+                                        ch._notLive();
+                                    }
                                 }
-                                ch._setLive();
-                                ch.liveSince = new Date();
-                                _a.label = 2;
-                            case 2: return [3 /*break*/, 4];
-                            case 3:
+                                return [3 /*break*/, 3];
+                            case 2:
                                 err_1 = _a.sent();
                                 console.log(err_1);
-                                return [3 /*break*/, 4];
-                            case 4: return [2 /*return*/];
+                                return [3 /*break*/, 3];
+                            case 3: return [2 /*return*/];
                         }
                     });
                 }); });
                 return [2 /*return*/];
             });
         }); };
+        /**
+         * @private
+         */
         _this.followListener = function () { return __awaiter(_this, void 0, void 0, function () {
             var token;
             var _this = this;

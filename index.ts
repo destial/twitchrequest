@@ -63,17 +63,24 @@ class Client extends EventEmitter {
     liveListener = async () => {
         this.channels.forEach(async (ch) => {
             try {
-                if (!ch.isLive()) {
-                    const streamData = await this.resolveStream(ch.user.id);
-                    if (!this.repeat) {
-                        if (streamData.date.getTime() > Date.now() - 1000*60*15) {
+                const streamData = await this.resolveStream(ch.user.id);
+                if (streamData) {
+                    if (!ch.isLive()) {
+                        if (!this.repeat) {
+                            if (streamData.date.getTime() > Date.now() - 1000*60*15) {
+                                this.emit(TwitchRequestEvents.LIVE, streamData);
+                            }
+                        } else {
                             this.emit(TwitchRequestEvents.LIVE, streamData);
                         }
-                    } else {
-                        this.emit(TwitchRequestEvents.LIVE, streamData);
+                        ch._setLive();
+                        ch.liveSince = new Date();
                     }
-                    ch._setLive();
-                    ch.liveSince = new Date();
+                } else {
+                    if (ch.isLive()) {
+                        this.emit(TwitchRequestEvents.UNLIVE);
+                        ch._notLive();
+                    }
                 }
             } catch (err) {
                 console.log(err);
