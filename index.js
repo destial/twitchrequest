@@ -63,40 +63,50 @@ var Client = /** @class */ (function (_super) {
             var _this = this;
             return __generator(this, function (_a) {
                 this.channels.forEach(function (ch) { return __awaiter(_this, void 0, void 0, function () {
-                    var streamData, err_1;
+                    var streamData, token, response, err_1;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                _a.trys.push([0, 2, , 3]);
+                                _a.trys.push([0, 6, , 7]);
                                 return [4 /*yield*/, this.resolveStream(ch.user.id)];
                             case 1:
                                 streamData = _a.sent();
-                                if (streamData) {
-                                    if (!ch.isLive()) {
-                                        if (!this.repeat) {
-                                            if (streamData.date.getTime() > Date.now() - 1000 * 60 * 15) {
-                                                this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
-                                            }
-                                        }
-                                        else {
+                                if (!streamData) return [3 /*break*/, 2];
+                                if (!ch.isLive()) {
+                                    if (!this.repeat) {
+                                        if (streamData.date.getTime() > Date.now() - 1000 * 60 * 15) {
                                             this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
                                         }
-                                        ch._setLive();
-                                        ch.liveSince = new Date();
+                                    }
+                                    else {
+                                        this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
+                                    }
+                                    ch._setLive();
+                                    ch.liveSince = new Date();
+                                }
+                                return [3 /*break*/, 5];
+                            case 2: return [4 /*yield*/, this.getToken()];
+                            case 3:
+                                token = _a.sent();
+                                return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/search/channels?query=" + ch.user.name, token)];
+                            case 4:
+                                response = _a.sent();
+                                if (response && response.data[0]) {
+                                    if (response.data[0].id === ch.user.id && !response.data[0].is_live) {
+                                        if (ch.isLive() && ch.liveSince && (ch.liveSince.getTime() < (Date.now() - (1000 * 60 * 3)))) {
+                                            this.emit(constants_1.TwitchRequestEvents.UNLIVE);
+                                            ch._notLive();
+                                            ch.liveSince = undefined;
+                                        }
                                     }
                                 }
-                                else {
-                                    if (ch.isLive()) {
-                                        this.emit(constants_1.TwitchRequestEvents.UNLIVE);
-                                        ch._notLive();
-                                    }
-                                }
-                                return [3 /*break*/, 3];
-                            case 2:
+                                _a.label = 5;
+                            case 5: return [3 /*break*/, 7];
+                            case 6:
                                 err_1 = _a.sent();
                                 console.log(err_1);
-                                return [3 /*break*/, 3];
-                            case 3: return [2 /*return*/];
+                                return [3 /*break*/, 7];
+                            case 7: return [2 /*return*/];
                         }
                     });
                 }); });
@@ -664,6 +674,79 @@ var StreamData = /** @class */ (function () {
     };
     return StreamData;
 }());
+var User = /** @class */ (function () {
+    function User(client, id) {
+        var _this = this;
+        this.init = function () { return __awaiter(_this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, (function () { return __awaiter(_this, void 0, void 0, function () {
+                        var user;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, this.client.resolveID(this.id)];
+                                case 1:
+                                    user = _a.sent();
+                                    if (user) {
+                                        this.name = user.name;
+                                        this.description = user.description;
+                                        this.profile = user.profile;
+                                        this.created = user.created;
+                                        this.views = user.views;
+                                        this.type = user.type;
+                                        return [2 /*return*/, this];
+                                    }
+                                    return [2 /*return*/];
+                            }
+                        });
+                    }); })];
+            });
+        }); };
+        this.client = client;
+        this.id = id;
+        (function () { return __awaiter(_this, void 0, void 0, function () {
+            var user;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.client.resolveID(this.id)];
+                    case 1:
+                        user = _a.sent();
+                        if (user) {
+                            this.name = user.name;
+                            this.description = user.description;
+                            this.profile = user.profile;
+                            this.created = user.created;
+                            this.views = user.views;
+                            this.type = user.type;
+                        }
+                        return [2 /*return*/, this];
+                }
+            });
+        }); })();
+    }
+    return User;
+}());
+var Stream = /** @class */ (function () {
+    function Stream(client, id) {
+        var _this = this;
+        this.init = function () {
+            _this.client.resolveStream(_this.id).then(function (stream) {
+                if (stream) {
+                    _this.name = stream.name;
+                    _this.title = stream.title;
+                    _this.game = stream.game;
+                    _this.profile = stream.profile;
+                    _this.thumbnail = stream.thumbnail;
+                    _this.viewers = stream.viewers;
+                    _this.user = stream.user;
+                }
+            });
+        };
+        this.client = client;
+        this.id = id;
+    }
+    return Stream;
+}());
 var UserData = /** @class */ (function () {
     function UserData(r, n, d, id, pfp, v, t) {
         this.raw = r;
@@ -764,5 +847,7 @@ module.exports = {
     UserData: UserData,
     TwitchChannelManager: TwitchChannelManager,
     FollowManager: FollowManager,
-    TwitchChannel: TwitchChannel
+    TwitchChannel: TwitchChannel,
+    User: User,
+    Stream: Stream
 };

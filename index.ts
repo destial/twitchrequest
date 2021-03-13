@@ -77,9 +77,16 @@ class Client extends EventEmitter {
                         ch.liveSince = new Date();
                     }
                 } else {
-                    if (ch.isLive()) {
-                        this.emit(TwitchRequestEvents.UNLIVE);
-                        ch._notLive();
+                    const token = await this.getToken();
+                    const response = await this.getData(`https://api.twitch.tv/helix/search/channels?query=${ch.user.name}`, token);
+                    if (response && response.data[0]) {
+                        if (response.data[0].id === ch.user.id && !response.data[0].is_live) { 
+                            if (ch.isLive() && ch.liveSince && (ch.liveSince.getTime() < (Date.now() - (1000 * 60 * 3)))) {
+                                this.emit(TwitchRequestEvents.UNLIVE);
+                                ch._notLive();
+                                ch.liveSince = undefined;
+                            }
+                        }
                     }
                 }
             } catch (err) {
@@ -450,6 +457,79 @@ class StreamData {
     }
 }
 
+class User {
+    client: Client;
+    id: string;
+    name: string;
+    description: string;
+    profile: URL;
+    created: Date;
+    views: number;
+    type: string
+    constructor(client: Client, id: string) {
+        this.client = client;
+        this.id = id;
+        (async () => {
+            const user = await this.client.resolveID(this.id)
+            if (user) {
+                this.name = user.name;
+                this.description = user.description;
+                this.profile = user.profile;
+                this.created = user.created;
+                this.views = user.views;
+                this.type = user.type;
+            }
+            return this;
+        })();
+    }
+    
+    init = async () => {
+        return (async () => {
+            const user = await this.client.resolveID(this.id)
+            if (user) {
+                this.name = user.name;
+                this.description = user.description;
+                this.profile = user.profile;
+                this.created = user.created;
+                this.views = user.views;
+                this.type = user.type;
+                return this;
+            }
+        });
+    }
+}
+
+class Stream {
+    client: Client;
+    name: string;
+    id: string;
+    title: string;
+    game: string;
+    date: Date;
+    profile: URL;
+    thumbnail: URL;
+    viewers: number;
+    user: UserData;
+    constructor(client: Client, id: string) {
+        this.client = client;
+        this.id = id;
+    }
+
+    init = () => {
+        this.client.resolveStream(this.id).then(stream => {
+            if (stream) {
+                this.name = stream.name;
+                this.title = stream.title;
+                this.game = stream.game;
+                this.profile = stream.profile;
+                this.thumbnail = stream.thumbnail;
+                this.viewers = stream.viewers;
+                this.user = stream.user;
+            }
+        });
+    }
+}
+
 class UserData {
     raw: any;
     name: string;
@@ -591,5 +671,7 @@ module.exports = {
     UserData,
     TwitchChannelManager,
     FollowManager,
-    TwitchChannel
+    TwitchChannel,
+    User,
+    Stream
 };
