@@ -67,7 +67,7 @@ class Client extends EventEmitter {
                 if (streamData) {
                     if (!ch.isLive()) {
                         if (!this.repeat) {
-                            if (streamData.date.getTime() > Date.now() - 1000*60*15) {
+                            if (streamData.date.getTime() > (Date.now() - (1000 * 60 * 15))) {
                                 this.emit(TwitchRequestEvents.LIVE, streamData);
                             }
                         } else {
@@ -76,12 +76,12 @@ class Client extends EventEmitter {
                         ch._setLive();
                         ch.liveSince = new Date();
                     }
-                } else {
+                } else if (ch.isLive()) {
                     const token = await this.getToken();
                     const response = await this.getData(`https://api.twitch.tv/helix/search/channels?query=${ch.user.name}`, token);
                     if (response && response.data[0]) {
                         if (response.data[0].id === ch.user.id && !response.data[0].is_live) { 
-                            if (ch.isLive() && ch.liveSince && (ch.liveSince.getTime() < (Date.now() - (1000 * 60 * 3)))) {
+                            if (ch.liveSince && (ch.liveSince.getTime() < (Date.now() - (1000 * 60 * 3)))) {
                                 this.emit(TwitchRequestEvents.UNLIVE);
                                 ch._notLive();
                                 ch.liveSince = undefined;

@@ -74,7 +74,7 @@ var Client = /** @class */ (function (_super) {
                                 if (!streamData) return [3 /*break*/, 2];
                                 if (!ch.isLive()) {
                                     if (!this.repeat) {
-                                        if (streamData.date.getTime() > Date.now() - 1000 * 60 * 15) {
+                                        if (streamData.date.getTime() > (Date.now() - (1000 * 60 * 15))) {
                                             this.emit(constants_1.TwitchRequestEvents.LIVE, streamData);
                                         }
                                     }
@@ -85,7 +85,9 @@ var Client = /** @class */ (function (_super) {
                                     ch.liveSince = new Date();
                                 }
                                 return [3 /*break*/, 5];
-                            case 2: return [4 /*yield*/, this.getToken()];
+                            case 2:
+                                if (!ch.isLive()) return [3 /*break*/, 5];
+                                return [4 /*yield*/, this.getToken()];
                             case 3:
                                 token = _a.sent();
                                 return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/search/channels?query=" + ch.user.name, token)];
@@ -93,7 +95,7 @@ var Client = /** @class */ (function (_super) {
                                 response = _a.sent();
                                 if (response && response.data[0]) {
                                     if (response.data[0].id === ch.user.id && !response.data[0].is_live) {
-                                        if (ch.isLive() && ch.liveSince && (ch.liveSince.getTime() < (Date.now() - (1000 * 60 * 3)))) {
+                                        if (ch.liveSince && (ch.liveSince.getTime() < (Date.now() - (1000 * 60 * 3)))) {
                                             this.emit(constants_1.TwitchRequestEvents.UNLIVE);
                                             ch._notLive();
                                             ch.liveSince = undefined;
