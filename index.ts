@@ -87,10 +87,22 @@ class Client extends EventEmitter {
                 } else if (ch.isLive()) {
                     const token = await this.getToken();
                     const response = await this.getData(`https://api.twitch.tv/helix/search/channels?query=${ch.user.name}`, token);
-                    if (response && response.data[0]) {
-                        if (response.data[0].id === ch.user.id && !response.data[0].is_live) { 
+                    if (isNotEmpty(response)) {
+                        const data = response.data.find((d: { id: string; }) => d.id === ch.user.id);
+                        if (data && !data.is_live) { 
                             if (ch.liveSince && (ch.liveSince.getTime() < (Date.now() - (1000 * 60 * 3)))) {
-                                this.emit(TwitchRequestEvents.UNLIVE);
+                                const userData = await this.resolveID(ch.user.id);
+                                if (userData) {
+                                    const streamData = new StreamData(
+                                        data, 
+                                        data.display_name, 
+                                        data.title, 
+                                        data.game, 
+                                        data.thumbnail_url, 
+                                        userData.profile,
+                                        0, userData);
+                                    this.emit(TwitchRequestEvents.UNLIVE, streamData);
+                                }
                                 ch._notLive();
                                 ch.liveSince = undefined;
                             }
@@ -186,7 +198,7 @@ class Client extends EventEmitter {
     /**
      * 
      * @param {string} username The username of the channel
-     * @returns {Promise<UserData>} s
+     * @returns {Promise<UserData>} 
      */
     getUser = async (username: string) => {
         return new Promise<UserData>(async (resolve, reject) => {

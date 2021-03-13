@@ -69,11 +69,11 @@ var Client = /** @class */ (function (_super) {
             var _this = this;
             return __generator(this, function (_a) {
                 this.channels.forEach(function (ch) { return __awaiter(_this, void 0, void 0, function () {
-                    var streamData, token, response, err_1;
+                    var streamData, token, response, data, userData, streamData_1, err_1;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                _a.trys.push([0, 6, , 7]);
+                                _a.trys.push([0, 7, , 8]);
                                 return [4 /*yield*/, this.resolveStream(ch.user.id)];
                             case 1:
                                 streamData = _a.sent();
@@ -90,31 +90,35 @@ var Client = /** @class */ (function (_super) {
                                     ch._setLive();
                                     ch.liveSince = new Date();
                                 }
-                                return [3 /*break*/, 5];
+                                return [3 /*break*/, 6];
                             case 2:
-                                if (!ch.isLive()) return [3 /*break*/, 5];
+                                if (!ch.isLive()) return [3 /*break*/, 6];
                                 return [4 /*yield*/, this.getToken()];
                             case 3:
                                 token = _a.sent();
                                 return [4 /*yield*/, this.getData("https://api.twitch.tv/helix/search/channels?query=" + ch.user.name, token)];
                             case 4:
                                 response = _a.sent();
-                                if (response && response.data[0]) {
-                                    if (response.data[0].id === ch.user.id && !response.data[0].is_live) {
-                                        if (ch.liveSince && (ch.liveSince.getTime() < (Date.now() - (1000 * 60 * 3)))) {
-                                            this.emit(constants_1.TwitchRequestEvents.UNLIVE);
-                                            ch._notLive();
-                                            ch.liveSince = undefined;
-                                        }
-                                    }
+                                if (!isNotEmpty(response)) return [3 /*break*/, 6];
+                                data = response.data.find(function (d) { return d.id === ch.user.id; });
+                                if (!(data && !data.is_live)) return [3 /*break*/, 6];
+                                if (!(ch.liveSince && (ch.liveSince.getTime() < (Date.now() - (1000 * 60 * 3))))) return [3 /*break*/, 6];
+                                return [4 /*yield*/, this.resolveID(ch.user.id)];
+                            case 5:
+                                userData = _a.sent();
+                                if (userData) {
+                                    streamData_1 = new StreamData(data, data.display_name, data.title, data.game, data.thumbnail_url, userData.profile, 0, userData);
+                                    this.emit(constants_1.TwitchRequestEvents.UNLIVE, streamData_1);
                                 }
-                                _a.label = 5;
-                            case 5: return [3 /*break*/, 7];
-                            case 6:
+                                ch._notLive();
+                                ch.liveSince = undefined;
+                                _a.label = 6;
+                            case 6: return [3 /*break*/, 8];
+                            case 7:
                                 err_1 = _a.sent();
                                 console.log(err_1);
-                                return [3 /*break*/, 7];
-                            case 7: return [2 /*return*/];
+                                return [3 /*break*/, 8];
+                            case 8: return [2 /*return*/];
                         }
                     });
                 }); });
@@ -237,7 +241,7 @@ var Client = /** @class */ (function (_super) {
         /**
          *
          * @param {string} username The username of the channel
-         * @returns {Promise<UserData>} s
+         * @returns {Promise<UserData>}
          */
         _this.getUser = function (username) { return __awaiter(_this, void 0, void 0, function () {
             var _this = this;
