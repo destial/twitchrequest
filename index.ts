@@ -2,6 +2,14 @@ import { EventEmitter } from 'events';
 import * as Request from 'request';
 import { TwitchRequestEvents } from './util/constants';
 
+const isEmpty = (str: string) => {
+    return (str == "" || str == null || str == undefined || str.length == 0 || str.trim().length == 0 || str.trim() == "");
+}
+
+const isNotEmpty = (response: any) => {
+    return (response && response.data && response.data.length);
+}
+
 class Client extends EventEmitter {
     private channels: TwitchChannel[];
     private clientid: string;
@@ -185,7 +193,7 @@ class Client extends EventEmitter {
             const token = await this.getToken();
             try {
                 const response = await this.getData(`https://api.twitch.tv/helix/users?login=${username.toLowerCase()}`, token);
-                if (!response || !response.data) {
+                if (!isNotEmpty(response)) {
                     resolve(undefined);
                 } else {
                     const e = response.data.find((d) => d.display_name.toLowerCase() === username.toLowerCase());
@@ -211,7 +219,7 @@ class Client extends EventEmitter {
             const token = await this.getToken();
             try {
                 const response = await this.getData(`https://api.twitch.tv/helix/users?id=${id}`, token);
-                if (!response || !response.data) {
+                if (!isNotEmpty(response)) {
                     resolve(undefined);
                 } else {
                     const e = response.data[0];
@@ -256,7 +264,7 @@ class Client extends EventEmitter {
             if (userData) {
                 var token = await this.getToken();
                 const response = await this.getData(`https://api.twitch.tv/helix/users/follows?to_id=${userData.id}&first=100`, token);
-                if (response && response.data) {
+                if (isNotEmpty(response)) {
                     for (const data of response.data) {
                         token = await this.getToken();
                         const res = await this.getData(`https://api.twitch.tv/helix/users?login=${data.from_login}`, token);
@@ -285,11 +293,12 @@ class Client extends EventEmitter {
             try {
                 const token = await this.getToken();
                 const response = await this.getData(`https://api.twitch.tv/helix/streams?user_id=${id}`, token);
-                if (response && response.data) {
-                    const e = response.data[0];
-                    if (e) {
-                        const userData = await this.resolveID(id);
-                        const stream = new StreamData(e, 
+                if (isNotEmpty(response)) {
+                    const e = response.data.find((d: { user_id: string; }) => d.user_id === id);
+                    const userData = await this.resolveID(id);
+                    if (e && userData) {  
+                        const stream = new StreamData(
+                            e, 
                             e.user_name, 
                             e.title, 
                             e.game_name, 
@@ -320,23 +329,19 @@ class Client extends EventEmitter {
         return new Promise<StreamData>(async (resolve, reject) => {
             const token = await this.getToken();
             try {
-                const response = await this.getData(`https://api.twitch.tv/helix/streams?user_login=${username.toLowerCase()}`, token);
-                if (response.data === undefined) {
+                const response = await this.getData(`https://api.twitch.tv/helix/streams?user_login=${username}`, token);
+                if (!isNotEmpty(response)) {
                     resolve(undefined);
                 } else {
-                    if (response.data.length === 0) {
+                    const e = response.data.find((d: any) => d.user_name.toLowerCase() === username.toLowerCase());
+                    if (!e) {
                         resolve(undefined);
                     } else {
-                        const e = response.data.find((d: any) => d.user_name.toLowerCase() === username.toLowerCase());
-                        if (!e) {
-                            resolve(undefined);
-                        } else {
-                            const res = await this.getData(`https://api.twitch.tv/helix/search/channels?query=${username.toLowerCase()}`, token);
-                            const ee = res.data.find((d: any) => d.display_name.toLowerCase() === username.toLowerCase());
-                            const userData = await this.getUser(username.toLowerCase());
-                            const stream = new StreamData(e, e.user_name, e.title, e.game_name, ee.thumbnail_url, `${e.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 9999999)}`, e.viewer_count, userData);
-                            resolve(stream);
-                        }
+                        const res = await this.getData(`https://api.twitch.tv/helix/search/channels?query=${username}`, token);
+                        const ee = res.data.find((d: any) => d.display_name.toLowerCase() === username.toLowerCase());
+                        const userData = await this.getUser(username.toLowerCase());
+                        const stream = new StreamData(e, e.user_name, e.title, e.game_name, ee.thumbnail_url, `${e.thumbnail_url.replace('{width}', '440').replace('{height}', '248')}?r=${Math.floor(Math.random() * 9999999)}`, e.viewer_count, userData);
+                        resolve(stream);
                     }
                 }
             } catch (err) {
@@ -646,10 +651,6 @@ class TwitchChannel {
     isLive() {
         return this.live;
     }
-}
-
-const isEmpty = (str: string) => {
-    return (str == "" || str == null || str == undefined || str.length == 0 || str.trim().length == 0 || str.trim() == "");
 }
 
 interface TwitchRequestOptions {
